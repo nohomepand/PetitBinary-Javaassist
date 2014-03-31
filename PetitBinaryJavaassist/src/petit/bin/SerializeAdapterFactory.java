@@ -137,7 +137,6 @@ public final class SerializeAdapterFactory {
 //				sb.append("System.out.println(" + field.SECOND.getName() + ");\n");
 //			}
 		}
-		sb.append("}");
 		System.err.println(sb.toString());
 		return sb.toString();
 	}

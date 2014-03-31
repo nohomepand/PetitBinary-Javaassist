@@ -23,10 +23,6 @@ public @interface Int8 {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
 		
-		public _MA() {
-			
-		}
-		
 		@Override
 		public String makeReaderSource(CtField field) {
 			return new StringBuilder()

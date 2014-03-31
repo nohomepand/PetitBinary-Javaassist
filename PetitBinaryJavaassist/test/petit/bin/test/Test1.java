@@ -53,6 +53,9 @@ public abstract class Test1 {
 		@StructMember(1)
 		public double iv2;
 		
+		@StructMember(2)
+		public int[] iv3;
+		
 	}
 	
 }

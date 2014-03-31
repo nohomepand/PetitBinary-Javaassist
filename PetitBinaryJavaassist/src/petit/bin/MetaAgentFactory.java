@@ -9,12 +9,14 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javassist.CannotCompileException;
+import javassist.CtClass;
 import javassist.CtField;
 import petit.bin.anno.DefaultFieldAnnotationType;
 import petit.bin.anno.SupportType;
 import petit.bin.anno.array.ArraySizeByField;
 import petit.bin.anno.array.ArraySizeByMethod;
 import petit.bin.anno.array.ArraySizeConstant;
+import petit.bin.anno.field.ExternStruct;
 import petit.bin.anno.field.Float32;
 import petit.bin.anno.field.Float64;
 import petit.bin.anno.field.Int16;
@@ -25,6 +27,7 @@ import petit.bin.anno.field.Int8Boolean;
 import petit.bin.anno.field.UInt16;
 import petit.bin.anno.field.UInt32;
 import petit.bin.anno.field.UInt8;
+import petit.bin.anno.field.array.ExternStructArray;
 import petit.bin.anno.field.array.Float32Array;
 import petit.bin.anno.field.array.Float64Array;
 import petit.bin.anno.field.array.Int16Array;
@@ -43,11 +46,25 @@ import petit.bin.store.WritableStore;
  */
 public final class MetaAgentFactory {
 	
-	public static final Map<Class<? extends Annotation>, MemberAnnotationMetaAgent> _member_anno_map = new HashMap<>();
+	private static final Map<Class<? extends Annotation>, MemberAnnotationMetaAgent> _member_anno_map = new HashMap<>();
 	
-	public static final Map<String, MemberAnnotationMetaAgent> _default_agent_map = new HashMap<>();
+	private static final Map<Class<?>, MemberAnnotationMetaAgent> _default_agent_map = new HashMap<>();
+	
+	private static MemberAnnotationMetaAgent _extern_ma, _extern_array_ma;
+	
+	private static final Map<CtClass, Class<?>> _primitive_ctclass_map;
 	
 	static {
+		_primitive_ctclass_map = new HashMap<>();
+		_primitive_ctclass_map.put(CtClass.booleanType, boolean.class);
+		_primitive_ctclass_map.put(CtClass.byteType, byte.class);
+		_primitive_ctclass_map.put(CtClass.shortType, short.class);
+		_primitive_ctclass_map.put(CtClass.charType, char.class);
+		_primitive_ctclass_map.put(CtClass.intType, int.class);
+		_primitive_ctclass_map.put(CtClass.longType, long.class);
+		_primitive_ctclass_map.put(CtClass.floatType, float.class);
+		_primitive_ctclass_map.put(CtClass.doubleType, double.class);
+		
 		addMetaAgent(UInt8.class);
 		addMetaAgent(UInt16.class);
 		addMetaAgent(UInt32.class);
@@ -65,6 +82,19 @@ public final class MetaAgentFactory {
 		addMetaAgent(Float32Array.class);
 		addMetaAgent(Float64Array.class);
 //		addMetaAgent(CharArray.class);
+		try {
+			{
+				final Class<?> mac = findMetaAgentClass(ExternStruct.class);
+				_extern_ma = (MemberAnnotationMetaAgent) mac.newInstance();
+			} {
+				final Class<?> mac = findMetaAgentClass(ExternStructArray.class);
+				_extern_array_ma = (MemberAnnotationMetaAgent) mac.newInstance();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			_extern_ma = null;
+			_extern_array_ma = null;
+		}
 	}
 	
 	private static final void addMetaAgent(final Class<? extends Annotation> member_anno) {
@@ -79,7 +109,7 @@ public final class MetaAgentFactory {
 				for (final Class<?> c : default_types.value()) {
 					if (_default_agent_map.containsKey(c))
 						throw new IllegalStateException("Default type of " + c + " is already defined by " + _default_agent_map.get(c).getTargetAnnotation());
-					_default_agent_map.put(c.getName(), metaag);
+					_default_agent_map.put(c, metaag);
 				}
 			}
 		} catch (Exception e) {
@@ -106,7 +136,19 @@ public final class MetaAgentFactory {
 		
 		// use default
 		try {
-			System.err.println("Field's type: " + field.getType().);
+			final CtClass field_ctype = field.getType();
+			final Class<?> field_type;
+			if (field_ctype.isPrimitive())
+				field_type = _primitive_ctclass_map.get(field_ctype);
+			else
+				field_type = field_ctype.toClass();
+//			System.err.println(field_ctype + " -> " + field_type + " -> " + _default_agent_map.get(field_type));
+			final MemberAnnotationMetaAgent maybe_null = _default_agent_map.get(field_type);
+			if (maybe_null != null)
+				return maybe_null;
+			
+			// use extern struct
+//			if (ct)
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -129,12 +171,12 @@ public final class MetaAgentFactory {
 		/**
 		 * {@link ReadableStore} のインスタンスを持つ変数名
 		 */
-		READER("_2"),
+		READER("src"),
 		
 		/**
 		 * {@link WritableStore} のインスタンスを持つ変数名
 		 */
-		WRITER("_3")
+		WRITER("dst")
 		;
 		
 		/**
