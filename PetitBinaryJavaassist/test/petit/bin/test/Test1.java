@@ -23,10 +23,14 @@ public abstract class Test1 {
 	protected int v4;
 	
 	@StructMember(4)
-	protected Inner3 v5;
+	protected Inner1 v5;
+	
+	private final void test1Private() {
+		System.out.println("aaa");
+	}
 	
 	@Struct
-	public static class Inner1 extends Test1 {
+	public static class Inner1 {
 		
 		@StructMember(5)
 		protected int iv1;
@@ -48,7 +52,7 @@ public abstract class Test1 {
 	}
 	
 	@Struct
-	public static class Inner3 {
+	public static class Inner3 extends Test1 {
 		
 		@StructMember(0)
 		protected int iv1;
@@ -65,7 +69,8 @@ public abstract class Test1 {
 		protected byte[] iv4;
 		
 		protected final int aaa(ReadableStore s) {
-			return 10;
+			((Test1) this).v1 = 10;
+			return 5;
 		}
 		
 	}

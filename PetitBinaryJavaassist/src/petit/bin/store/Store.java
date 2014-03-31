@@ -76,20 +76,20 @@ public interface Store {
 	 */
 	public abstract Class<?> currentType();
 	
-	// pack
-	/**
-	 * シリアライズ時の要素のパッキングサイズを得る
-	 * 
-	 * @return シリアライズ時の要素のパッキングサイズ
-	 */
-	public abstract int packSize();
-	
-	/**
-	 * シリアライズ時の要素のパッキングサイズを設定する
-	 * 
-	 * @param size シリアライズ時の要素のパッキングサイズ
-	 */
-	public abstract void packSize(final int size);
+//	// pack
+//	/**
+//	 * シリアライズ時の要素のパッキングサイズを得る
+//	 * 
+//	 * @return シリアライズ時の要素のパッキングサイズ
+//	 */
+//	public abstract int packSize();
+//	
+//	/**
+//	 * シリアライズ時の要素のパッキングサイズを設定する
+//	 * 
+//	 * @param size シリアライズ時の要素のパッキングサイズ
+//	 */
+//	public abstract void packSize(final int size);
 	
 	/**
 	 * 現在位置を得る

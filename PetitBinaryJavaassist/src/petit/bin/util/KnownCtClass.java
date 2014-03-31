@@ -2,6 +2,7 @@ package petit.bin.util;
 
 import javassist.CtClass;
 import petit.bin.SerializeAdapter;
+import petit.bin.SerializeAdapterFactory;
 import petit.bin.anno.Struct;
 import petit.bin.store.ReadableStore;
 import petit.bin.store.WritableStore;
@@ -21,16 +22,6 @@ public enum KnownCtClass {
 	ACLASS(Class.class),
 	
 	/**
-	 * {@link SerializeAdapter} に対応するもの
-	 */
-	SERIALIZE_ADAPTER(SerializeAdapter.class),
-	
-	/**
-	 * {@link Instantiator} に対応するもの
-	 */
-	INSTANTIATOR(Instantiator.class),
-	
-	/**
 	 * {@link Struct} に対応するもの
 	 */
 	STRUCT(Struct.class),
@@ -43,8 +34,27 @@ public enum KnownCtClass {
 	/**
 	 * {@link WritableStore} に対応するもの
 	 */
+	WRITABLE_STORE(WritableStore.class),
 	
-	WRITABLE_STORE(WritableStore.class)
+	/**
+	 * {@link Instantiator} に対応するもの
+	 */
+	INSTANTIATOR(Instantiator.class),
+	
+	/**
+	 * {@link ReflectionUtil} に対応するもの
+	 */
+	REFLECTIONUTIL(ReflectionUtil.class),
+
+	/**
+	 * {@link SerializeAdapterFactory} のcanonical name
+	 */
+	SERIALIZE_ADAPTER_FACTORY(SerializeAdapterFactory.class),
+	
+	/**
+	 * {@link SerializeAdapter} のfqn
+	 */
+	ISERIALIZE_ADAPTER(SerializeAdapter.class),
 	;
 	
 	/**
@@ -58,6 +68,11 @@ public enum KnownCtClass {
 	public final String BINARYNAME;
 	
 	/**
+	 * この値に対する {@link Class#getCanonicalName()}
+	 */
+	public final String CANONICALNAME;
+	
+	/**
 	 * この値に対する {@link CtClass}
 	 */
 	public final CtClass CT_CLAZZ;
@@ -65,6 +80,7 @@ public enum KnownCtClass {
 	private KnownCtClass(final Class<?> clazz) {
 		CLAZZ = clazz;
 		BINARYNAME = clazz.getName();
+		CANONICALNAME = clazz.getCanonicalName();
 		CT_CLAZZ = DefaultClassPool.CP.getOrNull(clazz.getName());
 	}
 	

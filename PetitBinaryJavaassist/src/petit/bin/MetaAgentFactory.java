@@ -12,6 +12,7 @@ import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtField;
 import petit.bin.anno.DefaultFieldAnnotationType;
+import petit.bin.anno.Struct;
 import petit.bin.anno.SupportType;
 import petit.bin.anno.array.ArraySizeByField;
 import petit.bin.anno.array.ArraySizeByMethod;
@@ -37,6 +38,9 @@ import petit.bin.anno.field.array.Int8Array;
 import petit.bin.store.ReadableStore;
 import petit.bin.store.WritableStore;
 import petit.bin.util.DefaultClassPool;
+import petit.bin.util.Instantiator;
+import petit.bin.util.KnownCtClass;
+import petit.bin.util.ReflectionUtil;
 
 /**
  * {@link MemberAnnotationMetaAgent} のファクトリ
@@ -151,10 +155,11 @@ public final class MetaAgentFactory {
 					return _default_agent_map.get(_primitive_ctclass_map.get(field_ctype));
 				else
 					return _extern_array_ma;
-			} else if (field_ctype.isPrimitive()){
+			} else if (field_ctype.isPrimitive()) {
 				return _default_agent_map.get(_primitive_ctclass_map.get(field_ctype));
-			} else
+			} else {
 				return _extern_ma;
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -170,19 +175,59 @@ public final class MetaAgentFactory {
 	 */
 	public static enum CodeFragments {
 		/**
-		 * シリアライズクラス型のインスタンスを持つ変数名
+		 * シリアライズクラス型のインスタンスを持つ変数名(多分メソッドのパラメータ)
 		 */
 		ACCESS_INSTANCE("_1"),
 		
 		/**
-		 * {@link ReadableStore} のインスタンスを持つ変数名
+		 * シリアライズクラス型のインスタンスを生成する {@link Instantiator} 型のインスタンスを持つ変数名(多分インスタンスフィールド)
+		 */
+		ACCESS_INSTANTIATOR("_instor"),
+		
+		/**
+		 * シリアライズクラス型の {@link Class} のインスタンスを持つ変数名(多分インスタンスフィールド)
+		 */
+		ACCESS_CLASS("_clazz"),
+		
+		/**
+		 * シリアライズクラスに指示された {@link Struct} アノテーションのインスタンスを持つ変数名(多分インスタンスフィールド)
+		 */
+		ACCESS_STRUCTANNO("_anno"),
+		
+		/**
+		 * {@link ReadableStore} のインスタンスを持つ変数名(多分メソッドのパラメータ)
 		 */
 		READER("src"),
 		
 		/**
-		 * {@link WritableStore} のインスタンスを持つ変数名
+		 * {@link WritableStore} のインスタンスを持つ変数名(多分メソッドのパラメータ)
 		 */
-		WRITER("dst")
+		WRITER("dst"),
+		
+		/**
+		 * {@link SerializeAdapter} のインスタンスを持つ変数名(多分ローカル変数)
+		 */
+		SERIALIZE_ADAPTER("sa"),
+		
+		/**
+		 * {@link Instantiator} のcanonical name
+		 */
+		INSTANTIATOR(KnownCtClass.INSTANTIATOR.BINARYNAME),
+		
+		/**
+		 * {@link ReflectionUtil} のcanonical name
+		 */
+		REFLECTIONUTIL(KnownCtClass.REFLECTIONUTIL.BINARYNAME),
+		
+		/**
+		 * {@link SerializeAdapterFactory} のcanonical name
+		 */
+		SERIALIZE_ADAPTER_FACTORY(KnownCtClass.SERIALIZE_ADAPTER_FACTORY.BINARYNAME),
+		
+		/**
+		 * {@link SerializeAdapter} のcanonical name
+		 */
+		ISERIALIZE_ADAPTER(KnownCtClass.ISERIALIZE_ADAPTER.BINARYNAME),
 		;
 		
 		/**

@@ -13,7 +13,7 @@ import javassist.Modifier;
 import javassist.NotFoundException;
 import petit.bin.MetaAgentFactory.CodeFragments;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
-import petit.bin.anno.Struct;
+import petit.bin.test.MockReadableStore;
 import petit.bin.test.Test1;
 import petit.bin.test.Test1.Inner3;
 import petit.bin.util.DefaultClassPool;
@@ -59,7 +59,7 @@ public final class SerializeAdapterFactory {
 	
 	@SuppressWarnings("unchecked")
 	private static final SerializeAdapter<?> createSerializeAdapter(final Class<?> clazz) throws CannotCompileException, NotFoundException {
-		if (KnownCtClass.SERIALIZE_ADAPTER.CT_CLAZZ == null)
+		if (KnownCtClass.ISERIALIZE_ADAPTER.CT_CLAZZ == null)
 			throw new NotFoundException("Cannot locate SerializeAdapter class");
 		checkStructClassModifier(clazz);
 		
@@ -68,22 +68,23 @@ public final class SerializeAdapterFactory {
 			final CtClass adapter_clazz = target_clazz.makeNestedClass(CONCRETE_SERIALIZER_CLASS_NAME, true);
 			
 			// add interface SerializeAdapter to adapter_clazz
-			adapter_clazz.addInterface(KnownCtClass.SERIALIZE_ADAPTER.CT_CLAZZ);
+			adapter_clazz.addInterface(KnownCtClass.ISERIALIZE_ADAPTER.CT_CLAZZ);
 			
 			// add fields to adapter_clazz
-			adapter_clazz.addField(JavaassistUtil.createPrivateFinalField(KnownCtClass.ACLASS.CT_CLAZZ, "_clazz", adapter_clazz));
-			adapter_clazz.addField(JavaassistUtil.createPrivateFinalField(KnownCtClass.INSTANTIATOR.CT_CLAZZ, "_instor", adapter_clazz));
-			adapter_clazz.addField(JavaassistUtil.createPrivateFinalField(KnownCtClass.STRUCT.CT_CLAZZ, "_anno", adapter_clazz));
+			adapter_clazz.addField(JavaassistUtil.createPrivateFinalField(KnownCtClass.ACLASS.CT_CLAZZ, CodeFragments.ACCESS_CLASS.ID, adapter_clazz));
+			adapter_clazz.addField(JavaassistUtil.createPrivateFinalField(KnownCtClass.INSTANTIATOR.CT_CLAZZ, CodeFragments.ACCESS_INSTANTIATOR.ID, adapter_clazz));
+			adapter_clazz.addField(JavaassistUtil.createPrivateFinalField(KnownCtClass.STRUCT.CT_CLAZZ, CodeFragments.ACCESS_STRUCTANNO.ID, adapter_clazz));
 			
 			// create constructor <init>(Class) of adapter_clazz
 			final CtConstructor adapter_ctor = new CtConstructor(new CtClass[] {KnownCtClass.ACLASS.CT_CLAZZ}, adapter_clazz);
 			adapter_ctor.setModifiers(Modifier.PUBLIC);
 			adapter_ctor.setBody(JavaassistUtil.join(
 					"{",
-						"_clazz = $1;",
-						"_instor = petit.bin.util.ReflectionUtil.getInstantiator(_clazz);",
-						"_anno = _clazz.getAnnotation(petit.bin.anno.Struct.class);",
-						"if (_anno == null) throw new IllegalArgumentException(\"" + Struct.class.getSimpleName() + " annotation is not present\");",
+						CodeFragments.ACCESS_CLASS.ID, " = $1;",
+						CodeFragments.ACCESS_INSTANTIATOR.ID, " = ", CodeFragments.REFLECTIONUTIL.invoke("getInstantiator", "_clazz"), ";",
+						CodeFragments.ACCESS_STRUCTANNO.ID, " = ", CodeFragments.ACCESS_CLASS.invoke("getAnnotation", KnownCtClass.STRUCT.CANONICALNAME + ".class"), ";",
+						"if (", CodeFragments.ACCESS_STRUCTANNO.ID, " == null) throw new IllegalArgumentException(\"",
+							KnownCtClass.STRUCT.CANONICALNAME," annotation is not present\");",
 					"}"
 					));
 			adapter_clazz.addConstructor(adapter_ctor);
@@ -95,20 +96,23 @@ public final class SerializeAdapterFactory {
 			final List<Pair<Class<?>, CtField>> managed_fields = JavaassistUtil.getManagedFields(DefaultClassPool.CP, clazz);
 			
 			adapter_clazz.addMethod(CtMethod.make(JavaassistUtil.join(
-					"public final Object read(Object ao, petit.bin.store.ReadableStore ", CodeFragments.READER.ID, ") throws Exception {",
-//						"src.pushByteOrder(_anno.byteOrder());",
-//						"src.pushType(_clazz);",
+					"public final Object read(Object ao, ", KnownCtClass.READABLE_STORE.CANONICALNAME, " ", CodeFragments.READER.ID, ") throws Exception {",
+						CodeFragments.READER.invoke("pushByteOrder", CodeFragments.ACCESS_STRUCTANNO.invoke("byteOrder")), ";",
+						CodeFragments.READER.invoke("pushType", CodeFragments.ACCESS_CLASS.ID), ";",
 						
 						makeReadMethodBody(clazz, adapter_clazz, managed_fields),
 						
-//						"src.popByteOrder();",
-//						"src.popType();",
+						CodeFragments.READER.invoke("popByteOrder"), ";",
+						CodeFragments.READER.invoke("popType"), ";",
 						"return ao;",
 					"}"
 					), adapter_clazz));
 			
-			adapter_clazz.addMethod(CtMethod.make("public final Object read(petit.bin.store.ReadableStore src) throws Exception { return read(_instor.newInstance(), src); }", adapter_clazz));
-			
+			adapter_clazz.addMethod(CtMethod.make(JavaassistUtil.join(
+					"public final Object read(", KnownCtClass.READABLE_STORE.CANONICALNAME, " ", CodeFragments.READER.ID, ") throws Exception {",
+						"return read(", CodeFragments.ACCESS_INSTANTIATOR.invoke("newInstance"), ", ", CodeFragments.READER.ID, ");",
+					"}"
+					), adapter_clazz));
 			
 			return (SerializeAdapter<?>) adapter_clazz.toClass().getConstructor(Class.class).newInstance(clazz);
 		} catch (CannotCompileException e) {
@@ -130,12 +134,9 @@ public final class SerializeAdapterFactory {
 		sb.append("System.out.println(ao.getClass());\n");
 		for (final Pair<Class<?>, CtField> field : managed_fields) {
 			final MemberAnnotationMetaAgent ma = MetaAgentFactory.getMetaAgent(field.SECOND);
+			if (ma == null)
+				throw new UnsupportedOperationException("Cannot find meta-agent for " + field.SECOND + " (MAY BE BUG)");
 			sb.append(ma.makeReaderSource(field.SECOND)).append("\n");
-//			if (target_clazz.isAssignableFrom(field.FIRST)) {
-//				sb.append("System.out.println(((" + field.SECOND.getDeclaringClass().getName() + ") ao)." + field.SECOND.getName() + ");\n");
-//			} else {
-//				sb.append("System.out.println(" + field.SECOND.getName() + ");\n");
-//			}
 		}
 		System.err.println(sb.toString());
 		return sb.toString();
@@ -143,10 +144,10 @@ public final class SerializeAdapterFactory {
 	
 	public static void main(String[] args) throws Exception {
 		final SerializeAdapter<Test1.Inner3> adapter = getSerializer(Test1.Inner3.class);
-		System.out.println(adapter.getTargetClass());
+//		System.out.println(adapter.getTargetClass());
 		final Inner3 ao = new Test1.Inner3();
 		ao.iv2 = 1.234;
-		adapter.read(ao, null);
+		adapter.read(ao, new MockReadableStore());
 	}
 	
 }
