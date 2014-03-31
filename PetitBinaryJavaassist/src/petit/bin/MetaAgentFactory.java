@@ -355,25 +355,5 @@ public final class MetaAgentFactory {
 		 */
 		public abstract String makeWriterSource(final CtField field) throws CannotCompileException;
 		
-//		/**
-//		 * 対象のメンバに対する読み込みを表すソースコードを生成する
-//		 * 
-//		 * @param access_base 対象のフィールドにアクセスしようとしているクラス
-//		 * @param access_inst access_base 型のインスタンスの参照を表す文字列
-//		 * @param field 対象のメンバが定義されたクラスと，対象のメンバからなるペア
-//		 * @return 対象のメンバに対する読み込みを表すソースコード
-//		 */
-//		public abstract String makeReaderSource(final Pair<Class<?>, CtClass> access_base, final String access_inst, final Pair<Class<?>, CtField> field);
-//		
-//		/**
-//		 * 対象のメンバを書き込むことを表すソースコードを生成する
-//		 * 
-//		 * @param access_base 対象のフィールドにアクセスしようとしているクラス
-//		 * @param access_inst access_base 型のインスタンスの参照を表す文字列
-//		 * @param field 対象のメンバが定義されたクラスと，対象のメンバからなるペア
-//		 * @return 対象のメンバを書き込むことを表すソースコード
-//		 */
-//		public abstract String makeWriterSource(final Pair<Class<?>, CtClass> access_base, final String access_inst, final Pair<Class<?>, CtField> field);
-		
 	}
 }

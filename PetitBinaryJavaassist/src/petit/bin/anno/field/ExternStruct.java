@@ -7,6 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 
+import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtField;
 
@@ -30,21 +31,20 @@ public @interface ExternStruct {
 	 */
 	public abstract String value();
 	
+	
+	
 	public static final class _MA extends MemberAnnotationMetaAgent {
 		
-		public _MA() throws Exception {
-			
-		}
-		
 		@Override
-		public String makeReaderSource(Pair<Class<?>, CtClass> access_base, String access_inst, Pair<Class<?>, CtField> field) {
-			 
+		public String makeReaderSource(CtField field) throws CannotCompileException {
+			field.getDeclaringClass().getf
+			/* 俺用 at 2014/03/31 17:31:02 */
 			return null;
 		}
 		
 		@Override
-		public String makeWriterSource(Pair<Class<?>, CtClass> access_base, String access_inst, Pair<Class<?>, CtField> field) {
-			/* 俺用 at 2014/03/31 13:04:46 */
+		public String makeWriterSource(CtField field) throws CannotCompileException {
+			/* 俺用 at 2014/03/31 17:31:03 */
 			return null;
 		}
 		
