@@ -2,6 +2,9 @@ package petit.bin.test;
 
 import petit.bin.anno.Struct;
 import petit.bin.anno.StructMember;
+import petit.bin.anno.array.ArraySizeByMethod;
+import petit.bin.anno.array.ArraySizeConstant;
+import petit.bin.store.ReadableStore;
 import petit.bin.store.Store.SerializationByteOrder;
 
 @Struct(byteOrder = SerializationByteOrder.NEUTRAL)
@@ -54,7 +57,16 @@ public abstract class Test1 {
 		public double iv2;
 		
 		@StructMember(2)
+		@ArraySizeConstant(10)
 		public int[] iv3;
+		
+		@StructMember(3)
+		@ArraySizeByMethod("aaa")
+		protected byte[] iv4;
+		
+		protected final int aaa(ReadableStore s) {
+			return 10;
+		}
 		
 	}
 	

@@ -36,6 +36,7 @@ import petit.bin.anno.field.array.Int64Array;
 import petit.bin.anno.field.array.Int8Array;
 import petit.bin.store.ReadableStore;
 import petit.bin.store.WritableStore;
+import petit.bin.util.DefaultClassPool;
 
 /**
  * {@link MemberAnnotationMetaAgent} のファクトリ
@@ -64,6 +65,13 @@ public final class MetaAgentFactory {
 		_primitive_ctclass_map.put(CtClass.longType, long.class);
 		_primitive_ctclass_map.put(CtClass.floatType, float.class);
 		_primitive_ctclass_map.put(CtClass.doubleType, double.class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(byte[].class.getName()), byte[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(short[].class.getName()), short[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(char[].class.getName()), char[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(int[].class.getName()), int[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(long[].class.getName()), long[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(float[].class.getName()), float[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(double[].class.getName()), double[].class);
 		
 		addMetaAgent(UInt8.class);
 		addMetaAgent(UInt16.class);
@@ -122,7 +130,7 @@ public final class MetaAgentFactory {
 			if (MemberAnnotationMetaAgent.class.isAssignableFrom(mc))
 				return mc;
 		}
-		throw new UnsupportedOperationException("Cannot find a sub-class of" + MemberAnnotationMetaAgent.class.getCanonicalName() + " in " + member_anno);
+		throw new UnsupportedOperationException("Cannot find a sub-class of " + MemberAnnotationMetaAgent.class.getCanonicalName() + " in " + member_anno);
 	}
 	
 	public static final MemberAnnotationMetaAgent getMetaAgent(final CtField field) {
@@ -137,18 +145,16 @@ public final class MetaAgentFactory {
 		// use default
 		try {
 			final CtClass field_ctype = field.getType();
-			final Class<?> field_type;
-			if (field_ctype.isPrimitive())
-				field_type = _primitive_ctclass_map.get(field_ctype);
-			else
-				field_type = field_ctype.toClass();
-//			System.err.println(field_ctype + " -> " + field_type + " -> " + _default_agent_map.get(field_type));
-			final MemberAnnotationMetaAgent maybe_null = _default_agent_map.get(field_type);
-			if (maybe_null != null)
-				return maybe_null;
-			
-			// use extern struct
-//			if (ct)
+			if (field_ctype.isArray()) {
+				final CtClass component_ctype = field_ctype.getComponentType();
+				if (component_ctype.isPrimitive())
+					return _default_agent_map.get(_primitive_ctclass_map.get(field_ctype));
+				else
+					return _extern_array_ma;
+			} else if (field_ctype.isPrimitive()){
+				return _default_agent_map.get(_primitive_ctclass_map.get(field_ctype));
+			} else
+				return _extern_ma;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
