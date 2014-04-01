@@ -1,5 +1,9 @@
 package petit.bin;
 
+import static petit.bin.MetaAgentFactory.CodeFragments.SERIALIZE_ADAPTER;
+import static petit.bin.MetaAgentFactory.CodeFragments.SERIALIZE_ADAPTER_FACTORY;
+import static petit.bin.util.KnownCtClass.ISERIALIZE_ADAPTER;
+
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,9 +13,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javassist.CannotCompileException;
-import javassist.CtClass;
 import javassist.CtField;
-import petit.bin.anno.DefaultFieldAnnotationType;
+import javassist.NotFoundException;
+import petit.bin.anno.MemberDefaultType;
 import petit.bin.anno.Struct;
 import petit.bin.anno.SupportType;
 import petit.bin.anno.array.ArraySizeByField;
@@ -37,10 +41,11 @@ import petit.bin.anno.field.array.Int64Array;
 import petit.bin.anno.field.array.Int8Array;
 import petit.bin.store.ReadableStore;
 import petit.bin.store.WritableStore;
-import petit.bin.util.DefaultClassPool;
-import petit.bin.util.Instantiator;
+import petit.bin.util.JavaassistUtil;
 import petit.bin.util.KnownCtClass;
+import petit.bin.util.Pair;
 import petit.bin.util.ReflectionUtil;
+import petit.bin.util.instor.Instantiator;
 
 /**
  * {@link MemberAnnotationMetaAgent} のファクトリ
@@ -57,26 +62,9 @@ public final class MetaAgentFactory {
 	
 	private static MemberAnnotationMetaAgent _extern_ma, _extern_array_ma;
 	
-	private static final Map<CtClass, Class<?>> _primitive_ctclass_map;
+//	private static final Map<CtClass, Class<?>> _primitive_ctclass_map;
 	
 	static {
-		_primitive_ctclass_map = new HashMap<>();
-		_primitive_ctclass_map.put(CtClass.booleanType, boolean.class);
-		_primitive_ctclass_map.put(CtClass.byteType, byte.class);
-		_primitive_ctclass_map.put(CtClass.shortType, short.class);
-		_primitive_ctclass_map.put(CtClass.charType, char.class);
-		_primitive_ctclass_map.put(CtClass.intType, int.class);
-		_primitive_ctclass_map.put(CtClass.longType, long.class);
-		_primitive_ctclass_map.put(CtClass.floatType, float.class);
-		_primitive_ctclass_map.put(CtClass.doubleType, double.class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(byte[].class.getName()), byte[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(short[].class.getName()), short[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(char[].class.getName()), char[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(int[].class.getName()), int[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(long[].class.getName()), long[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(float[].class.getName()), float[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(double[].class.getName()), double[].class);
-		
 		addMetaAgent(UInt8.class);
 		addMetaAgent(UInt16.class);
 		addMetaAgent(UInt32.class);
@@ -112,7 +100,7 @@ public final class MetaAgentFactory {
 	private static final void addMetaAgent(final Class<? extends Annotation> member_anno) {
 		try {
 			final Class<?> metaag_clazz = findMetaAgentClass(member_anno);
-			final DefaultFieldAnnotationType default_types = member_anno.getAnnotation(DefaultFieldAnnotationType.class);
+			final MemberDefaultType default_types = member_anno.getAnnotation(MemberDefaultType.class);
 			final SupportType support_types = member_anno.getAnnotation(SupportType.class);
 			final MemberAnnotationMetaAgent metaag = (MemberAnnotationMetaAgent) metaag_clazz.newInstance();
 			metaag.setSupportTypes(support_types == null ? null : support_types.value());
@@ -148,15 +136,11 @@ public final class MetaAgentFactory {
 		
 		// use default
 		try {
-			final CtClass field_ctype = field.getType();
-			if (field_ctype.isArray()) {
-				final CtClass component_ctype = field_ctype.getComponentType();
-				if (component_ctype.isPrimitive())
-					return _default_agent_map.get(_primitive_ctclass_map.get(field_ctype));
-				else
-					return _extern_array_ma;
-			} else if (field_ctype.isPrimitive()) {
-				return _default_agent_map.get(_primitive_ctclass_map.get(field_ctype));
+			final Pair<Class<?>, Boolean> clazz = JavaassistUtil.toClass(field.getType());
+			if (clazz.SECOND == null) {
+				return _default_agent_map.get(clazz.FIRST);
+			} else if (clazz.SECOND) {
+				return _extern_array_ma;
 			} else {
 				return _extern_ma;
 			}
@@ -177,7 +161,7 @@ public final class MetaAgentFactory {
 		/**
 		 * シリアライズクラス型のインスタンスを持つ変数名(多分メソッドのパラメータ)
 		 */
-		ACCESS_INSTANCE("_1"),
+		ACCESS_INSTANCE("_tgt"),
 		
 		/**
 		 * シリアライズクラス型のインスタンスを生成する {@link Instantiator} 型のインスタンスを持つ変数名(多分インスタンスフィールド)
@@ -296,6 +280,85 @@ public final class MetaAgentFactory {
 					sb.append(',');
 			}
 			return sb.append(')').toString();
+		}
+		
+	}
+	
+	/**
+	 * {@link CodeFragments} を使ってアクセスすると非常に長くなるので，そのシノニムを表すためのもの
+	 * 
+	 * @author 俺用
+	 * @since 2014/04/01 PetitBinaryJavaassist
+	 *
+	 */
+	public static final class CodeFragmentsSynonym {
+		
+		/**
+		 * instance.field_name な文字列
+		 */
+		public final String field;
+		
+		/**
+		 * instance.field_name[i] な文字列
+		 */
+		public final String fieldElm;
+		
+		/**
+		 * instance.field_name.length な文字列
+		 */
+		public final String fieldLen;
+		
+		/**
+		 * instance.field_name のcanonical な型名を表す文字列
+		 */
+		public final String fieldType;
+		
+		/**
+		 * instance.field_name が配列の場合，そのコンポーネント型のcanonical な型名を表す文字列<br />
+		 * 配列でない場合は null
+		 */
+		public final String fieldComponentType;
+		
+		/**
+		 * {@link SerializeAdapter} local_var = {@link SerializeAdapterFactory#getSerializer(Class)}({@link #fieldType}); な文字列
+		 */
+		public final String assignFieldTypeSerializeAdapter;
+		
+		/**
+		 * {@link SerializeAdapter} local_var = {@link SerializeAdapterFactory#getSerializer(Class)}({@link #fieldComponentType}); な文字列
+		 */
+		public final String assignComponentTypeSerializeAdapter;
+		
+		/**
+		 * 初期化
+		 * 
+		 * @param f 対象のフィールド
+		 * @throws ClassNotFoundException
+		 * @throws NotFoundException
+		 */
+		public CodeFragmentsSynonym(final CtField f) throws CannotCompileException {
+			try {
+				field = CodeFragments.ACCESS_INSTANCE.of(f.getName());
+				fieldElm = CodeFragments.ACCESS_INSTANCE.ofElement(f.getName(), "i");
+				fieldLen = CodeFragments.ACCESS_INSTANCE.ofArrayLength(f.getName());
+				
+				final Pair<Class<?>, Boolean> toc = JavaassistUtil.toClass(f.getType());
+				fieldType = toc.FIRST.getCanonicalName();
+				fieldComponentType = toc.FIRST.isArray() ? toc.FIRST.getComponentType().getCanonicalName() : null;
+				assignFieldTypeSerializeAdapter = new StringBuilder().append(ISERIALIZE_ADAPTER.CANONICALNAME).append(" ")
+							.append(SERIALIZE_ADAPTER.ID)
+							.append(" = ").append(SERIALIZE_ADAPTER_FACTORY.invoke("getSerializer", fieldType + ".class"))
+						.append(";")
+						.toString();
+				assignComponentTypeSerializeAdapter = new StringBuilder().append(ISERIALIZE_ADAPTER.CANONICALNAME).append(" ")
+						.append(SERIALIZE_ADAPTER.ID)
+						.append(" = ").append(SERIALIZE_ADAPTER_FACTORY.invoke("getSerializer", fieldComponentType + ".class"))
+					.append(";")
+					.toString();
+			} catch (Exception e) {
+				throw new CannotCompileException(e);
+			}
+			
 		}
 		
 	}

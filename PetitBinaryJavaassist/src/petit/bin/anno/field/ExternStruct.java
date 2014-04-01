@@ -9,8 +9,8 @@ import java.lang.reflect.Field;
 import javassist.CannotCompileException;
 import javassist.CtField;
 import petit.bin.MetaAgentFactory.CodeFragments;
+import petit.bin.MetaAgentFactory.CodeFragmentsSynonym;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
-import petit.bin.util.KnownCtClass;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -47,24 +47,24 @@ public @interface ExternStruct {
 			 */
 			
 			try {
-				final String str_field_type_clazz = Class.forName(field.getType().getName()).getCanonicalName();
+				final CodeFragmentsSynonym syno = new CodeFragmentsSynonym(field);
 				final StringBuilder sb = new StringBuilder();
 				sb
 					.append("{")
-					.append(KnownCtClass.ISERIALIZE_ADAPTER.CANONICALNAME).append(" ")
-						.append(CodeFragments.SERIALIZE_ADAPTER.ID).append(" = ").append(CodeFragments.SERIALIZE_ADAPTER_FACTORY.invoke("getSerializer", str_field_type_clazz + ".class")).append(";\n");
+					.append(syno.assignFieldTypeSerializeAdapter).append("\n");
+				
 				final ExternStruct esa = (ExternStruct) field.getAnnotation(ExternStruct.class);
 				if (esa != null && esa.value() != null && !esa.value().isEmpty()) {
 					// ExternStruct.value() is present
 					sb
-						.append(CodeFragments.ACCESS_INSTANCE.of(field.getName()))
+						.append(syno.field)
 							.append(" = ").append(CodeFragments.ACCESS_INSTANCE.invoke(esa.value())).append(";\n")
-						.append(CodeFragments.SERIALIZE_ADAPTER.invoke("read", CodeFragments.ACCESS_INSTANCE.of(field.getName()), CodeFragments.READER.ID)).append(";");
+						.append(CodeFragments.SERIALIZE_ADAPTER.invoke("read", syno.field, CodeFragments.READER.ID)).append(";");
 				} else {
 					// ExternStruct.value() is NOT present
 					sb
-						.append(CodeFragments.ACCESS_INSTANCE.of(field.getName()))
-							.append(" = (").append(str_field_type_clazz).append(") ").append(CodeFragments.SERIALIZE_ADAPTER.invoke("read", CodeFragments.READER.ID)).append(";");
+						.append(syno.field)
+							.append(" = (").append(syno.fieldType).append(") ").append(CodeFragments.SERIALIZE_ADAPTER.invoke("read", CodeFragments.READER.ID)).append(";");
 				}
 				sb.append("}");
 				return sb.toString();
@@ -81,19 +81,13 @@ public @interface ExternStruct {
 			 *     sa.write(<field>, <reader>);
 			 * }
 			 */
-			try {
-				return new StringBuilder()
-						.append("if (").append(CodeFragments.ACCESS_INSTANCE.of(field.getName())).append(" != null) {")
-							.append(KnownCtClass.ISERIALIZE_ADAPTER.CANONICALNAME).append(" ")
-								.append(CodeFragments.SERIALIZE_ADAPTER.ID).append(" = ").append(CodeFragments.SERIALIZE_ADAPTER_FACTORY.invoke("getSerializer", field.getType().toClass().getCanonicalName() + ".class")).append(";\n")
-							.append(CodeFragments.SERIALIZE_ADAPTER.invoke("write", CodeFragments.ACCESS_INSTANCE.of(field.getName()), CodeFragments.WRITER.ID))
-						.append("}")
-						.toString();
-			} catch (CannotCompileException e) {
-				throw e;
-			} catch (Exception e) {
-				throw new CannotCompileException(e);
-			}
+			final CodeFragmentsSynonym syno = new CodeFragmentsSynonym(field);
+			return new StringBuilder()
+					.append("if (").append(syno.field).append(" != null) {")
+						.append(syno.assignFieldTypeSerializeAdapter)
+						.append(CodeFragments.SERIALIZE_ADAPTER.invoke("write", syno.field, CodeFragments.WRITER.ID))
+					.append("}")
+					.toString();
 		}
 		
 	}

@@ -7,7 +7,8 @@ import java.lang.annotation.Target;
 
 import javassist.CannotCompileException;
 import javassist.CtField;
-
+import petit.bin.MetaAgentFactory.CodeFragments;
+import petit.bin.MetaAgentFactory.CodeFragmentsSynonym;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -25,100 +26,77 @@ public @interface ExternStructArray {
 		
 		@Override
 		public String makeReaderSource(CtField field) throws CannotCompileException {
-			throw new CannotCompileException("Not implemented");
+			/*
+			 * {
+			 *     int size = <ind>;
+			 *     if (<field> == null || <field>.length != size)
+			 *         <field> = new <field's type>[size];
+			 *     
+			 *     <SerializeAdapter> sa = <SerializeAdapterFactory>.getSerializer(<field's class>);
+			 *     for (int i = 0; i < <field>.length; i++)
+			 *         if ExternStruct.value() is not present:
+			 *             {
+			 *                 <field>[i] = sa.read(<reader>);
+			 *             }
+			 *         else
+			 *             {
+			 *                 <field>[i] = <method which is indicated by ExternStruct.value()>();
+			 *                 sa.read(<field>[i], <reader>);
+			 *             }
+			 *         
+			 * }
+			 */
+			try {
+				final CodeFragmentsSynonym syno = new CodeFragmentsSynonym(field);
+				final StringBuilder sb = new StringBuilder();
+				sb.append("{")
+					.append("int size = ").append(makeArraySizeIndicator(field)).append(";\n")
+					.append("if (").append(syno.field).append(" == null || ").append(syno.fieldLen).append(" != size)\n")
+							.append("\t").append(syno.field).append(" = new ").append(syno.fieldComponentType).append("[size];\n")
+					.append(syno.assignComponentTypeSerializeAdapter).append("\n")
+					.append("for (int i = 0; i < size; i++)\n");
+				
+				final ExternStructArray esaa = (ExternStructArray) field.getAnnotation(ExternStructArray.class);
+				if (esaa != null && esaa.value() != null && !esaa.value().isEmpty()) {
+					// ExternStructArray.value() is present
+					sb.append("\t{")
+						.append(syno.fieldElm).append(" = ").append(CodeFragments.ACCESS_INSTANCE.invoke(esaa.value())).append(";")
+						.append(CodeFragments.SERIALIZE_ADAPTER.invoke("read", syno.fieldElm, CodeFragments.READER.ID)).append(";")
+						.append("}\n");
+				} else {
+					// ExternStructArray.value() is NOT present
+					sb.append("\t")
+						.append(syno.fieldElm)
+							.append(" = ").append(CodeFragments.SERIALIZE_ADAPTER.invoke("read", CodeFragments.READER.ID))
+						.append(";\n");
+				}
+				
+				sb.append("}");
+				return sb.toString();
+			} catch (Exception e) {
+				throw new CannotCompileException(e);
+			}
 		}
 		
 		@Override
 		public String makeWriterSource(CtField field) throws CannotCompileException {
-			throw new CannotCompileException("Not implemented");
+			/*
+			 * if (<field> != null) {
+			 *     <SerializeAdapter> sa = <SerializeAdapterFactory>.getSerializer(<field's class>);
+			 *     for (int i = 0; i < <field's length>; i++)
+			 *        sa.write(<field[i]>, <dst>);
+			 * }
+			 */
+			final CodeFragmentsSynonym syno = new CodeFragmentsSynonym(field);
+			return new StringBuilder()
+					.append("if (").append(syno.field).append(" != null) {")
+						.append(syno.assignFieldTypeSerializeAdapter)
+						.append("for (int i = 0; i < ").append(syno.fieldLen).append("; i++)")
+							.append(CodeFragments.SERIALIZE_ADAPTER.invoke("write", syno.fieldElm, CodeFragments.WRITER.ID))
+					.append("}")
+					.toString();
 		}
 		
 	}
-	
-//	public static final class _MA extends MemberAccessor {
-//		
-//		private final ArraySizeIndicator _size_ind;
-//		
-//		private final BinaryAccessorFactory _ba_fac;
-//		
-//		private final Class<?> _component_type;
-//		
-//		@SuppressWarnings("rawtypes")
-//		private final BinaryAccessor _component_type_ba;
-//		
-//		private final FieldObjectInstantiator _component_instor;
-//		
-//		public _MA(final BinaryAccessorFactory ba_fac, final Field f) throws Exception {
-//			super(f);
-//			_size_ind = ArraySizeIndicator.getArraySizeIndicator(f);
-//			_ba_fac = ba_fac;
-//			_component_type = f.getType().getComponentType();
-//			
-//			final ExternStructArray esa = f.getAnnotation(ExternStructArray.class);
-//			if (esa != null && esa.value() != null) {
-//				_component_instor = FieldObjectInstantiator.getResolver(_component_type, f.getDeclaringClass(), esa.value());
-//				_component_type_ba = null;
-//			} else {
-//				_component_instor = FieldObjectInstantiator.getResolver(_component_type, null, null);
-//				_component_type_ba = ba_fac.getBinaryAccessor(_component_type);
-//			}
-//		}
-//		
-//		@SuppressWarnings("unchecked")
-//		@Override
-//		protected void _readFrom(SerializationContext ctx, Object inst, BinaryInput src) throws IOException, IllegalArgumentException, IllegalAccessException {
-//			try {
-//				final int size = _size_ind.getArraySize(src, inst, _field);
-//				Object ar = _field.get(inst);
-//				if (ar == null || Array.getLength(ar) != size)
-//					ar = Array.newInstance(_component_type, size);
-//				
-//				for (int i = 0; i < size; i++) {
-//					Object component_inst = _component_instor.getConcreteClassInstance(inst, inst, _field);
-//					if (component_inst == null) {
-//						Array.set(ar, i, null);
-//					} else if (_component_type_ba != null) {
-//						Array.set(ar, i, _component_type_ba.readFrom(ctx, component_inst, src));
-//					} else {
-//						Array.set(ar, i, _ba_fac.getBinaryAccessor(component_inst.getClass()).readFrom(ctx, component_inst, src));
-//					}
-//					
-//				}
-//				_field.set(inst, ar);
-//			} catch (Exception e) {
-//				throw new IOException(e);
-//			}
-//		}
-//		
-//		@SuppressWarnings("unchecked")
-//		@Override
-//		protected void _writeTo(SerializationContext ctx, Object inst, BinaryOutput dst) throws IOException, IllegalArgumentException, IllegalAccessException {
-//			try {
-//				final Object[] ar = (Object[]) _field.get(inst);
-//				if (ar == null)
-//					return;
-//				
-//				for (int i = 0; i < ar.length; i++) {
-//					if (ar[i] == null)
-//						continue;
-//					else if (_component_type_ba != null) {
-//						_component_type_ba.writeTo(ctx, ar[i], dst);
-//					} else {
-//						_ba_fac.getBinaryAccessor(ar[i].getClass()).writeTo(ctx, ar[i], dst);
-//					}
-//				}
-////				if (_fields_type_ba == null) {
-////					final BinaryAccessor ba = _ba_fac.getBinaryAccessor(obj.getClass());
-////					ba.writeTo(ctx, obj, dst);
-////				} else {
-////					_fields_type_ba.writeTo(ctx, obj, dst);
-////				}
-////				for (int i = 0; i < ar.length; _component_type_ba.writeTo(ctx, ar[i++], dst));
-//			} catch (Exception e) {
-//				throw new IOException(e);
-//			}
-//		}
-//		
-//	}
 	
 }

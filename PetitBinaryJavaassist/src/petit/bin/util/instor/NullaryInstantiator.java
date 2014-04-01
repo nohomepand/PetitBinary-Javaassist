@@ -1,4 +1,4 @@
-package petit.bin.util;
+package petit.bin.util.instor;
 
 import java.lang.reflect.Constructor;
 
@@ -10,7 +10,7 @@ import java.lang.reflect.Constructor;
  * @since 2014/03/17 PetitBinarySerialization
  *
  */
-final class NullaryInstantiator extends Instantiator {
+public final class NullaryInstantiator extends Instantiator {
 	
 	private final Constructor<?> _ctor;
 	

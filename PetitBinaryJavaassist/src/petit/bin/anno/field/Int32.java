@@ -8,12 +8,12 @@ import java.lang.annotation.Target;
 import javassist.CtField;
 import petit.bin.MetaAgentFactory.CodeFragments;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
-import petit.bin.anno.DefaultFieldAnnotationType;
+import petit.bin.anno.MemberDefaultType;
 import petit.bin.anno.SupportType;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-@DefaultFieldAnnotationType(int.class)
+@MemberDefaultType(int.class)
 @SupportType({
 	int.class, Integer.class,
 	long.class, Long.class})

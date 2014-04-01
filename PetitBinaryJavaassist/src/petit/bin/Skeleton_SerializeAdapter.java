@@ -3,8 +3,8 @@ package petit.bin;
 import petit.bin.anno.Struct;
 import petit.bin.store.ReadableStore;
 import petit.bin.store.WritableStore;
-import petit.bin.util.Instantiator;
 import petit.bin.util.ReflectionUtil;
+import petit.bin.util.instor.Instantiator;
 
 /**
  * 直列化された構造体へのアクセスを表す
@@ -65,19 +65,7 @@ public abstract class Skeleton_SerializeAdapter<T> {
 	 * @return 対象のインスタンスそのもの
 	 * @throws Exception
 	 */
-	public final T read(final T ao, final ReadableStore src) throws Exception {
-		src.pushByteOrder(_anno.byteOrder());
-		src.pushType(_clazz);
-		
-		final T result = readImpl(ao, src);
-		
-		src.popByteOrder();
-		src.popType();
-		
-		return result;
-	}
-	
-	protected abstract T readImpl(final T ao, final ReadableStore src) throws Exception;
+	public abstract T read(final T ao, final ReadableStore src) throws Exception;
 	
 	/**
 	 * 対象のインスタンスを出力先へ出力する
@@ -86,16 +74,6 @@ public abstract class Skeleton_SerializeAdapter<T> {
 	 * @param dst 出力先
 	 * @throws Exception
 	 */
-	public final void write(final T ao, final WritableStore dst) throws Exception {
-		dst.pushByteOrder(_anno.byteOrder());
-		dst.pushType(_clazz);
-		
-		writeImpl(ao, dst);
-		
-		dst.popByteOrder();
-		dst.popType();
-	}
-	
-	public abstract void writeImpl(final T ao, final WritableStore dst) throws Exception;
+	public abstract void write(final T ao, final WritableStore dst) throws Exception;
 	
 }

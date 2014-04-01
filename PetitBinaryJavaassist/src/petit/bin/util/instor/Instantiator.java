@@ -1,4 +1,4 @@
-package petit.bin.util;
+package petit.bin.util.instor;
 
 /**
  * あるクラスのインスタンスを生成するもの

@@ -4,7 +4,9 @@ package petit.bin.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -16,7 +18,63 @@ import petit.bin.anno.StructMember;
 
 public class JavaassistUtil {
 	
+	/**
+	 * {@link #getManagedFields(ClassPool, Class)} で private なフィールドをチェックする場合は true
+	 */
 	public static final boolean CHECK_FIELD_MODIFIER_PRIVATE = true;
+	
+	/**
+	 * {@link CtClass} からプリミティブ型およびプリミティブ型の配列へのマッピング
+	 */
+	private static final Map<CtClass, Class<?>> _primitive_ctclass_map;
+	
+	static {
+		_primitive_ctclass_map = new HashMap<>();
+		_primitive_ctclass_map.put(CtClass.booleanType, boolean.class);
+		_primitive_ctclass_map.put(CtClass.byteType, byte.class);
+		_primitive_ctclass_map.put(CtClass.shortType, short.class);
+		_primitive_ctclass_map.put(CtClass.charType, char.class);
+		_primitive_ctclass_map.put(CtClass.intType, int.class);
+		_primitive_ctclass_map.put(CtClass.longType, long.class);
+		_primitive_ctclass_map.put(CtClass.floatType, float.class);
+		_primitive_ctclass_map.put(CtClass.doubleType, double.class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(byte[].class.getName()), byte[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(short[].class.getName()), short[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(char[].class.getName()), char[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(int[].class.getName()), int[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(long[].class.getName()), long[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(float[].class.getName()), float[].class);
+		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(double[].class.getName()), double[].class);
+	}
+	
+	/**
+	 * {@link CtClass} が表すクラスを静的に解決する<br />
+	 * このメソッドは {@link CtClass#toClass()} を呼ばない<br />
+	 * 戻り値は，次のとおり
+	 * <pre>
+	 * 対象のクラスがプリミティブ型またはプリミティブ型の配列の場合: Pair(対象のクラス, null)
+	 * 対象のクラスが非配列型の場合: Pair(対象のクラス, false)
+	 * 対象のクラスが配列型の場合: Pair(対象のクラス, true)
+	 * </pre>
+	 * 
+	 * @param clazz 対象のクラス
+	 * @return 対象のクラスを表すクラス，および対象のクラスの種類を表すペア
+	 * @throws ClassNotFoundException 
+	 * @throws NotFoundException 
+	 */
+	public static final Pair<Class<?>, Boolean> toClass(final CtClass clazz) throws ClassNotFoundException, NotFoundException {
+		if (clazz.isArray()) {
+			final CtClass component_ctype = clazz.getComponentType();
+			if (component_ctype.isPrimitive())
+				return new Pair<Class<?>, Boolean>(_primitive_ctclass_map.get(clazz), null);
+			else
+				return new Pair<Class<?>, Boolean>(Class.forName("[L" + clazz.getComponentType().getName() + ";"), true);
+		} else if (clazz.isPrimitive()) {
+			return new Pair<Class<?>, Boolean>(_primitive_ctclass_map.get(clazz), null);
+		} else {
+			return new Pair<Class<?>, Boolean>(Class.forName(clazz.getName()), false);
+		}
+	}
 	
 	/**
 	 * 対象のクラスから可視なクラスのリストを得る
@@ -42,6 +100,15 @@ public class JavaassistUtil {
 		return result;
 	}
 	
+	/**
+	 * 対象のクラスから {@link StructMember} が与えられた {@link CtField} を得る
+	 * 
+	 * @param cp クラスプール
+	 * @param clazz 対象のクラス
+	 * @return 対象のクラスから得られた {@link StructMember} が与えられた {@link CtField} とその定義されたクラスのペア
+	 * @throws NotFoundException
+	 * @throws ClassNotFoundException
+	 */
 	public static final List<Pair<Class<?>, CtField>> getManagedFields(final ClassPool cp, final Class<?> clazz) throws NotFoundException, ClassNotFoundException {
 		final List<Pair<Class<?>, CtField>> result = new ArrayList<>();
 		for (final Class<?> c : findVisibleClasses(clazz, false)) {
@@ -73,6 +140,12 @@ public class JavaassistUtil {
 		return result;
 	}
 	
+	/**
+	 * 文字列を連結する
+	 * 
+	 * @param args 文字列
+	 * @return 連結された文字列
+	 */
 	public static final String join(final String ... args) {
 		final StringBuilder sb = new StringBuilder();
 		for (final String str : args)
@@ -80,6 +153,15 @@ public class JavaassistUtil {
 		return sb.toString();
 	}
 	
+	/**
+	 * private final なフィールドを対象のクラスへ生成する
+	 * 
+	 * @param type フィールドの型
+	 * @param name フィールドの名前
+	 * @param parent 対象のクラス
+	 * @return 生成されたフィールド
+	 * @throws CannotCompileException
+	 */
 	public static final CtField createPrivateFinalField(final CtClass type, final String name, final CtClass parent) throws CannotCompileException {
 		final CtField field = new CtField(type, name, parent);
 		field.setModifiers(Modifier.PRIVATE | Modifier.FINAL);

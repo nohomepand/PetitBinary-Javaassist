@@ -49,8 +49,8 @@ public final class SerializeAdapterFactory {
 	
 	private static final void checkStructClassModifier(final Class<?> clazz) throws CannotCompileException {
 		final int mod = clazz.getModifiers();
-		if ((mod & java.lang.reflect.Modifier.FINAL) != 0)
-			throw new CannotCompileException(clazz.getCanonicalName() +  ": final class is not supported");
+//		if ((mod & java.lang.reflect.Modifier.FINAL) != 0)
+//			throw new CannotCompileException(clazz.getCanonicalName() +  ": final class is not supported");
 		if ((mod & java.lang.reflect.Modifier.INTERFACE) != 0)
 			throw new CannotCompileException(clazz.getCanonicalName() +  ": interface type is not supported");
 		if (clazz.isMemberClass() && (mod & java.lang.reflect.Modifier.STATIC) == 0)
@@ -65,6 +65,7 @@ public final class SerializeAdapterFactory {
 		
 		try {
 			final CtClass target_clazz = DefaultClassPool.CP.get(clazz.getName());
+			System.err.println(">> Creating serialize adapter: " + clazz);
 			final CtClass adapter_clazz = target_clazz.makeNestedClass(CONCRETE_SERIALIZER_CLASS_NAME, true);
 			
 			// add interface SerializeAdapter to adapter_clazz
@@ -95,6 +96,7 @@ public final class SerializeAdapterFactory {
 			// add serialization methods
 			final List<Pair<Class<?>, CtField>> managed_fields = JavaassistUtil.getManagedFields(DefaultClassPool.CP, clazz);
 			
+			// for reader
 			adapter_clazz.addMethod(CtMethod.make(JavaassistUtil.join(
 					"public final Object read(Object ao, ", KnownCtClass.READABLE_STORE.CANONICALNAME, " ", CodeFragments.READER.ID, ") throws Exception {",
 						CodeFragments.READER.invoke("pushByteOrder", CodeFragments.ACCESS_STRUCTANNO.invoke("byteOrder")), ";",
@@ -114,6 +116,8 @@ public final class SerializeAdapterFactory {
 					"}"
 					), adapter_clazz));
 			
+			// for writer
+			
 			return (SerializeAdapter<?>) adapter_clazz.toClass().getConstructor(Class.class).newInstance(clazz);
 		} catch (CannotCompileException e) {
 			throw e;
@@ -130,8 +134,8 @@ public final class SerializeAdapterFactory {
 		 * <target_class> <ACCESS_INSTANCE.ID> = (<target_class>) ao;
 		 * <read elements>
 		 */
-		sb.append(target_clazz.getCanonicalName()).append(" ").append(CodeFragments.ACCESS_INSTANCE.ID).append(" = (").append(target_clazz.getCanonicalName()).append(") ao;");
-		sb.append("System.out.println(ao.getClass());\n");
+		sb.append(target_clazz.getCanonicalName()).append(" ").append(CodeFragments.ACCESS_INSTANCE.ID).append(" = (").append(target_clazz.getCanonicalName()).append(") ao;\n");
+//		sb.append("System.out.println(ao.getClass());\n");
 		for (final Pair<Class<?>, CtField> field : managed_fields) {
 			final MemberAnnotationMetaAgent ma = MetaAgentFactory.getMetaAgent(field.SECOND);
 			if (ma == null)
@@ -142,12 +146,17 @@ public final class SerializeAdapterFactory {
 		return sb.toString();
 	}
 	
+	private static final String makeWriteMethodBody(final Class<?> target_clazz, final CtClass adapter_clazz, final List<CtField> managed_fields) {
+		throw new UnsupportedOperationException();
+	}
+	
 	public static void main(String[] args) throws Exception {
 		final SerializeAdapter<Test1.Inner3> adapter = getSerializer(Test1.Inner3.class);
 //		System.out.println(adapter.getTargetClass());
 		final Inner3 ao = new Test1.Inner3();
 		ao.iv2 = 1.234;
 		adapter.read(ao, new MockReadableStore());
+		System.out.println(ao.iv2);
 	}
 	
 }

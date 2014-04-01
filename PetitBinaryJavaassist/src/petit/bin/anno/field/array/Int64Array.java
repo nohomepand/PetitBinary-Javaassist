@@ -7,26 +7,25 @@ import java.lang.annotation.Target;
 
 import javassist.CannotCompileException;
 import javassist.CtField;
+import petit.bin.MetaAgentFactory;
 import petit.bin.MetaAgentFactory.CodeFragments;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
-import petit.bin.anno.DefaultFieldAnnotationType;
+import petit.bin.anno.MemberDefaultType;
 import petit.bin.anno.SupportType;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-@DefaultFieldAnnotationType(long[].class)
+@MemberDefaultType(long[].class)
 @SupportType(long[].class)
 public @interface Int64Array {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
 		
-		private static final String raw_type = "long";
-		
 		private static final String store_type = "Int64";
 		
 		@Override
 		public String makeReaderSource(CtField field) throws CannotCompileException {
-			final String f = field.getName();
+			final MetaAgentFactory.CodeFragmentsSynonym syno = new MetaAgentFactory.CodeFragmentsSynonym(field);
 			final StringBuilder sb = new StringBuilder();
 			/* 
 			 * {
@@ -39,32 +38,29 @@ public @interface Int64Array {
 			 */
 			sb.append('{')
 				.append("int size = ").append(makeArraySizeIndicator(field)).append(";\n")
-				.append("if (")
-					.append(CodeFragments.ACCESS_INSTANCE.of(f)).append(" == null || ")
-					.append(CodeFragments.ACCESS_INSTANCE.ofArrayLength(f)).append(" != size)\n")
-				.append("\t").append(CodeFragments.ACCESS_INSTANCE.of(f)).append(" = new ").append(raw_type).append("[size];\n")
+				.append("if (").append(syno.field).append(" == null || ").append(syno.fieldLen).append(" != size)\n")
+						.append("\t").append(syno.field).append(" = new ").append(syno.fieldComponentType).append("[size];\n")
 				.append("for (int i = 0; i < size; i++)\n")
 				.append("\t")
-					.append(CodeFragments.ACCESS_INSTANCE.ofElement(f, "i"))
-					.append(" = ")
-					.append(CodeFragments.READER.invoke("read" + store_type))
-					.append(';')
+					.append(syno.fieldElm).append(" = ").append(CodeFragments.READER.invoke("read" + store_type)).append(';')
 			.append('}');
 			return sb.toString();
 		}
 		
 		@Override
 		public String makeWriterSource(CtField field) throws CannotCompileException {
-			final String f = field.getName();
+			final MetaAgentFactory.CodeFragmentsSynonym syno = new MetaAgentFactory.CodeFragmentsSynonym(field);
 			final StringBuilder sb = new StringBuilder();
 			/*
 			 * {
-			 *     for (int i = 0; i < <field length>; <write>);
+			 *     if (<field> == null) return;
+			 *     for (int i = 0; i < <field length>; i++) <write>;
 			 * }
 			 */
 			sb.append('{')
-				.append("for (int i = 0; i < ").append(CodeFragments.ACCESS_INSTANCE.ofArrayLength(f)).append("; i++)")
-					.append(CodeFragments.WRITER.invoke("write" + store_type, CodeFragments.ACCESS_INSTANCE.ofElement(f, "i"))).append(';')
+				.append("if (").append(syno.field).append(" == null) return;")
+				.append("for (int i = 0; i < ").append(syno.fieldLen).append("; i++)")
+					.append(CodeFragments.WRITER.invoke("write" + store_type, syno.fieldElm)).append(';')
 				.append('}');
 			return sb.toString();
 		}

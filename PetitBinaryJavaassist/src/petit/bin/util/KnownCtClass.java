@@ -6,6 +6,7 @@ import petit.bin.SerializeAdapterFactory;
 import petit.bin.anno.Struct;
 import petit.bin.store.ReadableStore;
 import petit.bin.store.WritableStore;
+import petit.bin.util.instor.Instantiator;
 
 /**
  * よく知られた {@link CtClass} の定数
