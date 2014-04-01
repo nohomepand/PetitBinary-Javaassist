@@ -1,5 +1,7 @@
 package petit.bin.test;
 
+import java.nio.ByteBuffer;
+
 import petit.bin.SerializeAdapter;
 import petit.bin.PetitSerializer;
 import petit.bin.anno.Struct;
@@ -9,6 +11,7 @@ import petit.bin.anno.array.ArraySizeConstant;
 import petit.bin.anno.field.UInt16;
 import petit.bin.store.ReadableStore;
 import petit.bin.store.Store.SerializationByteOrder;
+import petit.bin.store.impl.SimpleByteBufferStore;
 
 @Struct(byteOrder = SerializationByteOrder.NEUTRAL)
 public class Test1 {
@@ -89,10 +92,23 @@ public class Test1 {
 	public static void main(String[] args) throws Exception {
 		final SerializeAdapter<Test1.Inner3> adapter = PetitSerializer.getSerializer(Test1.Inner3.class);
 //		System.out.println(adapter.getTargetClass());
+		MockReadableStore.STDOUT = false;
+		MockWritableStore.STDOUT = true;
 		final Inner3 ao = new Test1.Inner3();
 		ao.iv2 = 1.234;
 		adapter.read(ao, new MockReadableStore());
 		System.out.println(ao.iv2);
+		System.out.println("---------------------");
+		ao.iv1 = 100;
+		for (int i = 0; i < ao.iv3.length; i++)
+			ao.iv3[i] = i + 1;
+//		adapter.write(ao, new MockWritableStore());
+		final ByteBuffer bb = ByteBuffer.allocate(10000);
+		final SimpleByteBufferStore sb = new SimpleByteBufferStore(bb);
+		adapter.write(ao, sb);
+		bb.flip();
+		System.out.println(AbstractExample.dumpData(bb));
+		System.out.println(adapter.getClass());
 	}
 	
 }

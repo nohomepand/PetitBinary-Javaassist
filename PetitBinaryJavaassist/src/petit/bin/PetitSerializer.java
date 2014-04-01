@@ -26,7 +26,7 @@ import petit.bin.util.KnownCtClass;
  */
 public final class PetitSerializer {
 	
-	public static final String CONCRETE_SERIALIZER_CLASS_NAME = "$__SerializerAdapter__";
+	public static final String CONCRETE_SERIALIZER_CLASS_NAME = "$__SerializeAdapter__";
 	
 	/**
 	 * シリアライズクラスに対する実際の {@link SerializeAdapter} のマップ

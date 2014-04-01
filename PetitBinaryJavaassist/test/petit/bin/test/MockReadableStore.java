@@ -6,15 +6,13 @@ import petit.bin.store.ReadableStore;
 
 public class MockReadableStore implements ReadableStore {
 
+	public static boolean STDOUT = true;
+	
 	@Override
-	public void pushByteOrder(SerializationByteOrder bo) {
-		
-	}
+	public void pushByteOrder(SerializationByteOrder bo) {}
 
 	@Override
-	public void popByteOrder() {
-		
-	}
+	public void popByteOrder() {}
 
 	@Override
 	public SerializationByteOrder currentByteOrder() {
@@ -22,14 +20,10 @@ public class MockReadableStore implements ReadableStore {
 	}
 
 	@Override
-	public void pushType(Class<?> structure) {
-		
-	}
+	public void pushType(Class<?> structure) {}
 
 	@Override
-	public void popType() {
-		
-	}
+	public void popType() {}
 
 	@Override
 	public Class<?> currentType() {
@@ -42,43 +36,41 @@ public class MockReadableStore implements ReadableStore {
 	}
 
 	@Override
-	public void setPosition(int pos) {
-		
-	}
+	public void setPosition(int pos) {}
 
 	@Override
 	public byte readInt8() throws IOException {
-		System.out.println("ReadInt8");
+		if (STDOUT) System.out.println("ReadInt8");
 		return 0;
 	}
 
 	@Override
 	public short readInt16() throws IOException {
-		System.out.println("ReadInt16");
+		if (STDOUT) System.out.println("ReadInt16");
 		return 0;
 	}
 
 	@Override
 	public int readInt32() throws IOException {
-		System.out.println("ReadInt32");
+		if (STDOUT) System.out.println("ReadInt32");
 		return 0;
 	}
 
 	@Override
 	public long readInt64() throws IOException {
-		System.out.println("ReadInt64");
+		if (STDOUT) System.out.println("ReadInt64");
 		return 0;
 	}
 
 	@Override
 	public float readFloat() throws IOException {
-		System.out.println("ReadFloat");
+		if (STDOUT) System.out.println("ReadFloat");
 		return 0;
 	}
 
 	@Override
 	public double readDouble() throws IOException {
-		System.out.println("ReadDouble");
+		if (STDOUT) System.out.println("ReadDouble");
 		return 0;
 	}
 	

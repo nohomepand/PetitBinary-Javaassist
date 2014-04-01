@@ -90,7 +90,7 @@ public @interface ExternStructArray {
 			final CodeFragmentsSynonym syno = new CodeFragmentsSynonym(field);
 			return new StringBuilder()
 					.append("if (").append(syno.field).append(" != null) {")
-						.append(syno.assignFieldTypeSerializeAdapter)
+						.append(syno.assignComponentTypeSerializeAdapter)
 						.append("for (int i = 0; i < ").append(syno.fieldLen).append("; i++)")
 							.append(CodeFragments.SERIALIZE_ADAPTER.invoke("write", syno.fieldElm, CodeFragments.WRITER.ID)).append(";")
 					.append("}")
