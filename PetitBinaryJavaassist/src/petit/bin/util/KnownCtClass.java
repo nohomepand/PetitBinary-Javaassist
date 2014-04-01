@@ -2,7 +2,7 @@ package petit.bin.util;
 
 import javassist.CtClass;
 import petit.bin.SerializeAdapter;
-import petit.bin.SerializeAdapterFactory;
+import petit.bin.PetitSerializer;
 import petit.bin.anno.Struct;
 import petit.bin.store.ReadableStore;
 import petit.bin.store.WritableStore;
@@ -48,9 +48,9 @@ public enum KnownCtClass {
 	REFLECTIONUTIL(ReflectionUtil.class),
 
 	/**
-	 * {@link SerializeAdapterFactory} のcanonical name
+	 * {@link PetitSerializer} のcanonical name
 	 */
-	SERIALIZE_ADAPTER_FACTORY(SerializeAdapterFactory.class),
+	SERIALIZE_ADAPTER_FACTORY(PetitSerializer.class),
 	
 	/**
 	 * {@link SerializeAdapter} のfqn

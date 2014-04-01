@@ -15,9 +15,9 @@ import petit.bin.anno.SupportType;
 @Target(ElementType.FIELD)
 @MemberDefaultType(char.class)
 @SupportType({
-	char.class, Character.class,
-	int.class, Integer.class,
-	long.class, Long.class})
+	char.class,
+	int.class,
+	long.class})
 public @interface UInt16 {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
@@ -37,9 +37,11 @@ public @interface UInt16 {
 		@Override
 		public String makeWriterSource(CtField field) {
 			return new StringBuilder()
-					.append(CodeFragments.WRITER.invoke("writeInt16",
-							"(char)(" + CodeFragments.ACCESS_INSTANCE.of(field.getName())) + " & 0xffff)"
-						)
+					.append(
+						CodeFragments.WRITER.invoke(
+							"writeInt16",
+							"(short)(" + CodeFragments.ACCESS_INSTANCE.of(field.getName()) + " & 0xffff)"
+					))
 					.append(';')
 					.toString();
 		}

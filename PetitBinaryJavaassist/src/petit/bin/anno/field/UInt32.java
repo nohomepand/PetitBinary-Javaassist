@@ -13,7 +13,7 @@ import petit.bin.anno.SupportType;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @SupportType({
-	long.class, Long.class})
+	long.class})
 public @interface UInt32 {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
@@ -33,9 +33,10 @@ public @interface UInt32 {
 		@Override
 		public String makeWriterSource(CtField field) {
 			return new StringBuilder()
-					.append(CodeFragments.WRITER.invoke("writeInt32",
-							"(long)(" + CodeFragments.ACCESS_INSTANCE.of(field.getName())) + " & 0xffffffffL)"
-						)
+					.append(CodeFragments.WRITER.invoke(
+							"writeInt32",
+							"(long)(" + CodeFragments.ACCESS_INSTANCE.of(field.getName()) + " & 0xffffffffL)"
+					))
 					.append(';')
 					.toString();
 		}

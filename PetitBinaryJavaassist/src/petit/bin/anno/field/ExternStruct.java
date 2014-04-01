@@ -35,12 +35,12 @@ public @interface ExternStruct {
 			/*
 			 * if ExternStruct.value() is not present:
 			 *     {
-			 *         <SerializeAdapter> sa = <SerializeAdapterFactory>.getSerializer(<field's class>);
+			 *         <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<field's class>);
 			 *         <field> = sa.read(<reader>);
 			 *     }
 			 * else
 			 *     {
-			 *         <SerializeAdapter> sa = <SerializeAdapterFactory>.getSerializer(<field's class>);
+			 *         <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<field's class>);
 			 *         <field> = <method which is indicated by ExternStruct.value()>();
 			 *         sa.read(<field>, <reader>);
 			 *     }
@@ -77,7 +77,7 @@ public @interface ExternStruct {
 		public String makeWriterSource(CtField field) throws CannotCompileException {
 			/*
 			 * if (<field> != null) {
-			 *     <SerializeAdapter> sa = <SerializeAdapterFactory>.getSerializer(<field>.getClass());
+			 *     <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<field>.getClass());
 			 *     sa.write(<field>, <reader>);
 			 * }
 			 */
@@ -85,7 +85,7 @@ public @interface ExternStruct {
 			return new StringBuilder()
 					.append("if (").append(syno.field).append(" != null) {")
 						.append(syno.assignFieldTypeSerializeAdapter)
-						.append(CodeFragments.SERIALIZE_ADAPTER.invoke("write", syno.field, CodeFragments.WRITER.ID))
+						.append(CodeFragments.SERIALIZE_ADAPTER.invoke("write", syno.field, CodeFragments.WRITER.ID)).append(";")
 					.append("}")
 					.toString();
 		}

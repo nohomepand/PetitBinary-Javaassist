@@ -15,8 +15,8 @@ import petit.bin.anno.SupportType;
 @Target(ElementType.FIELD)
 @MemberDefaultType(int.class)
 @SupportType({
-	int.class, Integer.class,
-	long.class, Long.class})
+	int.class,
+	long.class})
 public @interface Int32 {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {

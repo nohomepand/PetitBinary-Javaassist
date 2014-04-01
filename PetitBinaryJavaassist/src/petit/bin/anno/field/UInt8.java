@@ -20,9 +20,9 @@ import petit.bin.anno.SupportType;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @SupportType({
-	short.class, Short.class,
-	int.class, Integer.class,
-	long.class, Long.class})
+	short.class,
+	int.class,
+	long.class,})
 public @interface UInt8 {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
@@ -42,9 +42,10 @@ public @interface UInt8 {
 		@Override
 		public String makeWriterSource(CtField field) {
 			return new StringBuilder()
-					.append(CodeFragments.WRITER.invoke("writeInt8",
-							"(byte)(" + CodeFragments.ACCESS_INSTANCE.of(field.getName())) + " & 0xff)"
-						)
+					.append(CodeFragments.WRITER.invoke(
+							"writeInt8",
+							"(byte)(" + CodeFragments.ACCESS_INSTANCE.of(field.getName()) + " & 0xff)"
+					))
 					.append(';')
 					.toString();
 		}

@@ -14,7 +14,7 @@ import petit.bin.anno.SupportType;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @MemberDefaultType(boolean.class)
-@SupportType({boolean.class, Boolean.class})
+@SupportType({boolean.class})
 public @interface Int8Boolean {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {

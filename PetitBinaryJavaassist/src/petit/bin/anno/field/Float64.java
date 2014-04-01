@@ -15,7 +15,7 @@ import petit.bin.anno.SupportType;
 @Target(ElementType.FIELD)
 @MemberDefaultType(double.class)
 @SupportType({
-	double.class, Double.class})
+	double.class})
 public @interface Float64 {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {

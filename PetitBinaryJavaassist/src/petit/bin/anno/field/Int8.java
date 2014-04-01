@@ -15,10 +15,10 @@ import petit.bin.anno.SupportType;
 @Target(ElementType.FIELD)
 @MemberDefaultType(byte.class)
 @SupportType({
-	byte.class, Byte.class,
-	short.class, Short.class,
-	int.class, Integer.class,
-	long.class, Long.class})
+	byte.class,
+	short.class,
+	int.class,
+	long.class,})
 public @interface Int8 {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {

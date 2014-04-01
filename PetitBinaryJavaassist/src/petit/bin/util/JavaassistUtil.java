@@ -105,12 +105,12 @@ public class JavaassistUtil {
 	 * 
 	 * @param cp クラスプール
 	 * @param clazz 対象のクラス
-	 * @return 対象のクラスから得られた {@link StructMember} が与えられた {@link CtField} とその定義されたクラスのペア
+	 * @return 対象のクラスからなるリスト
 	 * @throws NotFoundException
 	 * @throws ClassNotFoundException
 	 */
-	public static final List<Pair<Class<?>, CtField>> getManagedFields(final ClassPool cp, final Class<?> clazz) throws NotFoundException, ClassNotFoundException {
-		final List<Pair<Class<?>, CtField>> result = new ArrayList<>();
+	public static final List<CtField> getManagedFields(final ClassPool cp, final Class<?> clazz) throws NotFoundException, ClassNotFoundException {
+		final List<CtField> result = new ArrayList<>();
 		for (final Class<?> c : findVisibleClasses(clazz, false)) {
 			final CtClass cur = cp.getOrNull(c.getName());
 			for (final CtField field : cur.getDeclaredFields()) {
@@ -120,16 +120,16 @@ public class JavaassistUtil {
 				if (CHECK_FIELD_MODIFIER_PRIVATE && (field.getModifiers() & Modifier.PRIVATE) != 0)
 					throw new UnsupportedOperationException(field.getSignature() + " is private member(public, protected or default are applicable)");
 				
-				result.add(new Pair<Class<?>, CtField>(c, field));
+				result.add(field);
 			}
 		}
 		
-		Collections.sort(result, new Comparator<Pair<Class<?>, CtField>>() {
+		Collections.sort(result, new Comparator<CtField>() {
 			@Override
-			public int compare(Pair<Class<?>, CtField> o1, Pair<Class<?>, CtField> o2) {
+			public int compare(CtField o1, CtField o2) {
 				try {
-					final StructMember v1 = (StructMember) o1.SECOND.getAnnotation(StructMember.class);
-					final StructMember v2 = (StructMember) o2.SECOND.getAnnotation(StructMember.class);
+					final StructMember v1 = (StructMember) o1.getAnnotation(StructMember.class);
+					final StructMember v2 = (StructMember) o2.getAnnotation(StructMember.class);
 					return v1.value() - v2.value();
 				} catch (ClassNotFoundException e) {
 					return 0;

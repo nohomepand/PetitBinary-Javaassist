@@ -104,6 +104,7 @@ public final class MetaAgentFactory {
 			final SupportType support_types = member_anno.getAnnotation(SupportType.class);
 			final MemberAnnotationMetaAgent metaag = (MemberAnnotationMetaAgent) metaag_clazz.newInstance();
 			metaag.setSupportTypes(support_types == null ? null : support_types.value());
+			metaag.setTargetAnnotation(member_anno);
 			_member_anno_map.put(member_anno, metaag);
 			if (default_types != null) {
 				for (final Class<?> c : default_types.value()) {
@@ -204,7 +205,7 @@ public final class MetaAgentFactory {
 		REFLECTIONUTIL(KnownCtClass.REFLECTIONUTIL.BINARYNAME),
 		
 		/**
-		 * {@link SerializeAdapterFactory} のcanonical name
+		 * {@link PetitSerializer} のcanonical name
 		 */
 		SERIALIZE_ADAPTER_FACTORY(KnownCtClass.SERIALIZE_ADAPTER_FACTORY.BINARYNAME),
 		
@@ -320,12 +321,12 @@ public final class MetaAgentFactory {
 		public final String fieldComponentType;
 		
 		/**
-		 * {@link SerializeAdapter} local_var = {@link SerializeAdapterFactory#getSerializer(Class)}({@link #fieldType}); な文字列
+		 * {@link SerializeAdapter} local_var = {@link PetitSerializer#getSerializer(Class)}({@link #fieldType}); な文字列
 		 */
 		public final String assignFieldTypeSerializeAdapter;
 		
 		/**
-		 * {@link SerializeAdapter} local_var = {@link SerializeAdapterFactory#getSerializer(Class)}({@link #fieldComponentType}); な文字列
+		 * {@link SerializeAdapter} local_var = {@link PetitSerializer#getSerializer(Class)}({@link #fieldComponentType}); な文字列
 		 */
 		public final String assignComponentTypeSerializeAdapter;
 		
@@ -377,6 +378,9 @@ public final class MetaAgentFactory {
 		
 		private final Set<Class<?>> _support_types;
 		
+		/**
+		 * 初期化
+		 */
 		public MemberAnnotationMetaAgent() {
 			_support_types = new HashSet<>();
 		}
@@ -399,10 +403,43 @@ public final class MetaAgentFactory {
 			return _support_types;
 		}
 		
+		/**
+		 * 対象のフィールドが正しい型か検証する
+		 * 
+		 * @param field 対象のフィールド
+		 */
+		public final void checkSupportTypes(final CtField field) throws CannotCompileException {
+			if (_support_types == null || _support_types.isEmpty())
+				return; // any type is ok
+			
+			try {
+				final Pair<Class<?>, Boolean> type = JavaassistUtil.toClass(field.getType());
+				for (final Class<?> vt : _support_types)
+					if (vt.equals(type.FIRST))
+						return;
+				throw new CannotCompileException(field + " is not valid type for " + _target_anno.getCanonicalName() + ". The type must be one of " + _support_types);
+			} catch (CannotCompileException e) {
+				throw e;
+			} catch (Exception e) {
+				throw new CannotCompileException(e);
+			}
+			
+		}
+		
+		/**
+		 * {@link Int32} などのフィールドアノテーションを設定する
+		 * 
+		 * @param target_anno フィールドアノテーション
+		 */
 		final void setTargetAnnotation(final Class<? extends Annotation> target_anno) {
 			_target_anno = target_anno;
 		}
 		
+		/**
+		 * {@link Int32} などのフィールドアノテーションを得る
+		 * 
+		 * @return フィールドアノテーション
+		 */
 		public final Class<? extends Annotation> getTargetAnnotation() {
 			return _target_anno;
 		}

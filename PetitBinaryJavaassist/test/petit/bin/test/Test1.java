@@ -1,5 +1,7 @@
 package petit.bin.test;
 
+import petit.bin.SerializeAdapter;
+import petit.bin.PetitSerializer;
 import petit.bin.anno.Struct;
 import petit.bin.anno.StructMember;
 import petit.bin.anno.array.ArraySizeByMethod;
@@ -22,7 +24,7 @@ public class Test1 {
 	
 	@StructMember(3)
 	@UInt16
-	protected int v4;
+	protected char v4;
 	
 	@StructMember(4)
 	protected Inner1 v5;
@@ -82,6 +84,15 @@ public class Test1 {
 			return 5;
 		}
 		
+	}
+	
+	public static void main(String[] args) throws Exception {
+		final SerializeAdapter<Test1.Inner3> adapter = PetitSerializer.getSerializer(Test1.Inner3.class);
+//		System.out.println(adapter.getTargetClass());
+		final Inner3 ao = new Test1.Inner3();
+		ao.iv2 = 1.234;
+		adapter.read(ao, new MockReadableStore());
+		System.out.println(ao.iv2);
 	}
 	
 }
