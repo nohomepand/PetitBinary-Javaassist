@@ -9,6 +9,7 @@ import petit.bin.anno.StructMember;
 import petit.bin.anno.array.ArraySizeByMethod;
 import petit.bin.anno.array.ArraySizeConstant;
 import petit.bin.anno.field.UInt16;
+import petit.bin.example.AbstractExample;
 import petit.bin.store.ReadableStore;
 import petit.bin.store.Store.SerializationByteOrder;
 import petit.bin.store.impl.SimpleByteBufferStore;
@@ -27,7 +28,7 @@ public class Test1 {
 	
 	@StructMember(3)
 	@UInt16
-	protected char v4;
+	protected int v4;
 	
 	@StructMember(4)
 	protected Inner1 v5;
@@ -84,7 +85,7 @@ public class Test1 {
 		
 		protected final int aaa(ReadableStore s) {
 //			((Test1) this).v1 = 10;
-			return 5;
+			return 4;
 		}
 		
 	}
@@ -102,6 +103,10 @@ public class Test1 {
 		ao.iv1 = 100;
 		for (int i = 0; i < ao.iv3.length; i++)
 			ao.iv3[i] = i + 1;
+		ao.iv5.v1 = 1;
+		ao.iv5.v2 = 2;
+		ao.iv5.v3 = 3;
+		ao.iv5.v4 = -2;
 //		adapter.write(ao, new MockWritableStore());
 		final ByteBuffer bb = ByteBuffer.allocate(10000);
 		final SimpleByteBufferStore sb = new SimpleByteBufferStore(bb);

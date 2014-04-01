@@ -1,10 +1,21 @@
-package petit.bin.test;
+package petit.bin.example;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import petit.bin.PetitSerializer;
+import petit.bin.SerializeAdapter;
+import petit.bin.store.impl.SimpleByteBufferStore;
+
+/**
+ * petit.bin.example パッケージで実行可能な例のベースクラス
+ * 
+ * @author 俺用
+ * @since 2014/04/01 PetitBinaryJavaassist
+ *
+ */
 public abstract class AbstractExample {
 	
 	private static final char[][] HEX_TABLE;
@@ -67,6 +78,41 @@ public abstract class AbstractExample {
 		
 		return sw.toString();
 	}
+	
+	public static final ByteBuffer testSerializeObject(final Object ao, final int buf_size) throws Exception {
+		if (ao == null)
+			throw new NullPointerException("Argument ao must not be null");
+		
+		@SuppressWarnings("unchecked")
+		final SerializeAdapter<Object> ser = PetitSerializer.getSerializer((Class<Object>) ao.getClass());
+		final ByteBuffer buf = ByteBuffer.allocate(buf_size);
+		final SimpleByteBufferStore store = new SimpleByteBufferStore(buf);
+		
+		// serialize ao to store
+		ser.write(ao, store);
+		
+		// deserialize from store
+		buf.flip();
+		final Object read = ser.read(store);
+		
+		// se
+		for (Class<?> cur = ao.getClass(); cur != null; cur = cur.getSuperclass()) {
+			
+		}
+		for (final Field field : ReflectionUtil.getVisibleFields(ao.getClass(), VisibilityConstraint.INHERITED_CLASS_VIEWPOINT, null, null)) {
+			if (!field.isAnnotationPresent(StructMember.class)) {
+				System.out.println(field.getDeclaringClass().getCanonicalName() + "#" + field.getName() + " : skip");
+				continue;
+			}
+			field.setAccessible(true);
+			final Object ao_field = field.get(ao);
+			final Object obj_field = field.get(obj);
+			
+			System.out.println(field.getDeclaringClass().getCanonicalName() + "#" + field.getName() +
+					" : " + (objectEquals(ao_field, obj_field) ? "ok" : (ao_field + " != " + (obj_field.getClass().isArray() ? Arrays.toString((Object[])obj_field) : obj_field.toString()))));
+		}
+	}
+	
 //	
 //	/**
 //	 * Tests serialization.
