@@ -11,11 +11,11 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
-import petit.bin.MetaAgentFactory.CodeFragments;
+import petit.bin.CodeGenerator.CodeFragments;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 import petit.bin.util.DefaultClassPool;
-import petit.bin.util.Util;
 import petit.bin.util.KnownCtClass;
+import petit.bin.util.Util;
 
 /**
  * シリアライズクラスに対する実際の {@link Skeleton_SerializeAdapter} を得るためのファクトリ
@@ -74,6 +74,11 @@ public final class PetitSerializer {
 			// create constructor <init>(Class) of adapter_clazz
 			final CtConstructor adapter_ctor = new CtConstructor(new CtClass[] {KnownCtClass.ACLASS.CT_CLAZZ}, adapter_clazz);
 			adapter_ctor.setModifiers(Modifier.PUBLIC);
+			final CodeGenerator cg = new CodeGenerator(null);
+			cg.replaceAll(
+						"{" +
+						"	$varTargetClass$ = $1;" +	
+						"}");
 			adapter_ctor.setBody(Util.join(
 					"{",
 						CodeFragments.ACCESS_CLASS.ID, " = $1;",

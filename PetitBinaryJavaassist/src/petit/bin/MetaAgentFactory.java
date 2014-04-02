@@ -242,14 +242,8 @@ public final class MetaAgentFactory {
 				throw new NullPointerException("Argument params must not be null");
 			
 			
-			final StringBuilder sig = new StringBuilder();
-			sig.append("(");
-			for (final Class<?> param : params)
-				sig.append(param.getName());
-			sig.append(")");
-			sig.append(return_type.getName());
 			try {
-				return clazz.getMethod(name, sig.toString());
+				return clazz.getMethod(name, Util.getMethodSignature(return_type, params));
 			} catch (NotFoundException e) {
 				return null;
 			}

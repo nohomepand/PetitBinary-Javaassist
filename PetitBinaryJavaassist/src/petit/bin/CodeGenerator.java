@@ -2,13 +2,13 @@ package petit.bin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtField;
-import javassist.NotFoundException;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 import petit.bin.anno.Struct;
 import petit.bin.anno.array.ArraySizeByField;
@@ -180,7 +180,6 @@ public final class CodeGenerator {
 		} catch (Exception e) {
 			throw new CannotCompileException(e);
 		}
-		System.out.println(_mapper);
 	}
 	
 	private final void map(final Enum<?> id, final String replacement) {
@@ -204,7 +203,7 @@ public final class CodeGenerator {
 		}
 		return result;
 	}
-	public static void main(String[] args) throws CannotCompileException, NotFoundException {
+	public static void main(String[] args) throws Exception {
 		final CodeGenerator cg = new CodeGenerator(ClassPool.getDefault().getOrNull("petit.bin.test.Test1").getField("v5"));
 		final String s = "{" + "\n" +
 				"$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeField.class);" + "\n" + 
@@ -212,6 +211,8 @@ public final class CodeGenerator {
 				"}";
 		
 		System.out.println(cg.replaceAll(s));
+		for (final Entry<String, String> ent : cg._mapper.entrySet())
+			System.out.println(ent.getKey() + " = " + ent.getValue());
 	}
 	
 }

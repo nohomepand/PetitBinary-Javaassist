@@ -1,6 +1,7 @@
 package petit.bin.util;
 
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -197,6 +198,49 @@ public class Util {
 			_class_instantiator_map.put(clazz, instor);
 			return instor;
 		}
+	}
+	
+	public static final String getMethodSignature(final Method m) {
+		return getMethodSignature(m.getReturnType(), m.getParameterTypes());
+	}
+	
+	public static final String getMethodSignature(final Class<?> return_type, final Class<?> ... params) {
+		final StringBuilder sig = new StringBuilder();
+		sig.append("(");
+		for (final Class<?> param : params) {
+			sig.append(getTypeSignature(param));
+		}
+		sig.append(")").append(getTypeSignature(return_type));
+		
+		return sig.toString();
+	}
+	
+	private static final String getTypeSignature(final Class<?> type) {
+		if (type.isArray())
+			return "[" + getTypeSignature(type.getComponentType());
+		else if (type.isPrimitive()) {
+			if (void.class.equals(type))
+				return "V";
+			else if (boolean.class.equals(type))
+				return "Z";
+			else if (byte.class.equals(type))
+				return "B";
+			else if (char.class.equals(type))
+				return "C";
+			else if (double.class.equals(type))
+				return "D";
+			else if (float.class.equals(type))
+				return "F";
+			else if (int.class.equals(type))
+				return "I";
+			else if (long.class.equals(type))
+				return "J";
+			else if (short.class.equals(type))
+				return "S";
+			else
+				throw new UnsupportedOperationException("Unknown Primitive Type " + type);
+		} else
+			return "L" + type.getCanonicalName().replace('.', '/') + ";";
 	}
 	
 }
