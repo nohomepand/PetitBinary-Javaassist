@@ -5,8 +5,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import javassist.CannotCompileException;
 import javassist.CtField;
-import petit.bin.MetaAgentFactory.CodeFragments;
+import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 import petit.bin.anno.MemberDefaultType;
 import petit.bin.anno.SupportType;
@@ -18,24 +19,14 @@ import petit.bin.anno.SupportType;
 public @interface Int8Boolean {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
-		
 		@Override
-		public String makeReaderSource(CtField field) {
-			return new StringBuilder()
-					.append(CodeFragments.ACCESS_INSTANCE.of(field.getName()))
-					.append(" = ")
-					.append(CodeFragments.READER.invoke("readInt8"))
-					.append(" != 0")
-					.append(';')
-					.toString();
+		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+			return cg.replaceAll("$varField$ = $varReader$.readInt8() != 0;");
 		}
 		
 		@Override
-		public String makeWriterSource(CtField field) {
-			return new StringBuilder()
-					.append(CodeFragments.WRITER.invoke("writeInt8", "(byte) (" + CodeFragments.ACCESS_INSTANCE.of(field.getName()) + " ? 1 : 0)"))
-					.append(';')
-					.toString();
+		public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+			return cg.replaceAll("$varWriter$.writeInt8((byte) ($varField$ ? 1 : 0));");
 		}
 		
 	}

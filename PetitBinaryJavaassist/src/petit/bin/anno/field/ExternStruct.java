@@ -9,8 +9,7 @@ import java.lang.reflect.Field;
 import javassist.CannotCompileException;
 import javassist.CtField;
 import javassist.CtMethod;
-import petit.bin.MetaAgentFactory.CodeFragments;
-import petit.bin.MetaAgentFactory.CodeFragmentsSynonym;
+import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -32,7 +31,7 @@ public @interface ExternStruct {
 	public static final class _MA extends MemberAnnotationMetaAgent {
 		
 		@Override
-		public String makeReaderSource(CtField field) throws CannotCompileException {
+		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
 			/*
 			 * if ExternStruct.value() is not present:
 			 *     {
@@ -55,58 +54,79 @@ public @interface ExternStruct {
 			 */
 			
 			try {
-				final CodeFragmentsSynonym syno = new CodeFragmentsSynonym(field);
-				final StringBuilder sb = new StringBuilder();
-				sb
-					.append("{");
-				
 				final ExternStruct esa = (ExternStruct) field.getAnnotation(ExternStruct.class);
 				if (esa != null && esa.value() != null && !esa.value().isEmpty()) {
+					cg.map("esa", esa.value());
 					// ExternStruct.value() is present
-					sb.append(CodeFragments.TEMPORARY_CLASS.defineVar("Class", null));
 					final CtMethod return_type_class_method = getCtMethod(field.getDeclaringClass(), esa.value(), Class.class);
 					if (return_type_class_method != null) {
 						// esa.value() points to a (?)Ljava/lang/Class; method
-						sb.append(CodeFragments.TEMPORARY_CLASS.ID).append(" = ").append(CodeFragments.ACCESS_INSTANCE.invoke(esa.value())).append(";\n");
+						/*
+							{
+								Class ac = <method which is indicated by ExternStruct.value()>();
+								<SerializeAdapter> sa = <PetitSerializer>.getSerializer(ac);
+								<vVarField> = sa.read(<reader>);
+							}
+						 */
+						return cg.replaceAll(
+								"{" +
+								"	Class c = $varTarget$.$esa$();" +
+								"	if (c != null) {" +
+								"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer(c);" +
+								"		$varField$ = ($typeField$) sa.read($varReader$);" +
+								"	}" +
+								"}");
 					} else {
-						// esa.value() points to (?)L?; method
-						sb.append(syno.field).append(" = (").append(syno.fieldType).append(") ").append(CodeFragments.ACCESS_INSTANCE.invoke(esa.value())).append(";\n");
-						sb.append(CodeFragments.TEMPORARY_CLASS.ID).append(" = ").append(syno.fieldObjectType).append(";\n");
+						/*
+						 *     {
+						 *         <vVarField> = <method which is indicated by ExternStruct.value()>();
+						 *         <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<vVarField.getClass()>);
+						 *         sa.read(<vVarField>, <reader>);
+						 *     }
+						 */
+						return cg.replaceAll(
+								"{" +
+								"	$varField$ = ($typeField$) $varTarget$.$esa$();" +
+								"	if ($varField$ != null) {" +
+								"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($varField$.getClass());" +
+								"		sa.read($varField$, $varReader$);" +
+								"	}" +
+								"}");
 					}
-					sb
-						.append(syno.assignTemporaryClassSerializer).append(";\n")
-						.append(CodeFragments.SERIALIZER.invoke("read", syno.field, CodeFragments.READER.ID)).append(";");
 				} else {
 					// ExternStruct.value() is NOT present
-					sb
-						.append(syno.assignFieldTypeSerializeAdapter).append("\n")
-						.append(syno.field)
-							.append(" = (").append(syno.fieldType).append(") ").append(CodeFragments.SERIALIZER.invoke("read", CodeFragments.READER.ID)).append(";");
+					/*
+					 *     {
+					 *         <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<vVarField's class>);
+					 *         <vVarField> = sa.read(<reader>);
+					 *     }
+					 */
+					return cg.replaceAll(
+							"{" +
+							"	$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeField$.class);" +
+							"	$varField$ = ($typeField$) sa.read($varReader$);" +
+							"}");
 				}
-				sb.append("}");
-				return sb.toString();
 			} catch (Exception e) {
 				throw new CannotCompileException(e);
 			}
 		}
 		
 		@Override
-		public String makeWriterSource(CtField field) throws CannotCompileException {
+		public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
 			/*
 			 * if (<vVarField> != null) {
 			 *     <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<vVarField>.getClass());
 			 *     sa.write(<vVarField>, <reader>);
 			 * }
 			 */
-			final CodeFragmentsSynonym syno = new CodeFragmentsSynonym(field);
-			return new StringBuilder()
-					.append("if (").append(syno.field).append(" != null) {")
-//						.append(syno.assignFieldTypeSerializeAdapter) vVarField typeではなくて実際の値の型
-						.append(syno.ass)
-						.append(syno.)
-						.append(CodeFragments.SERIALIZE_ADAPTER.invoke("write", syno.field, CodeFragments.WRITER.ID)).append(";")
-					.append("}")
-					.toString();
+			return cg.replaceAll(
+					"{" +
+					"	if ($varField$ != null) {" +
+					"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($varField$.getClass());" +
+					"		sa.write($varField$, $varWriter$);" +
+					"	}" +
+					"}");
 		}
 		
 	}

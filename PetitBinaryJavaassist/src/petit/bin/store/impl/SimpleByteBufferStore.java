@@ -37,11 +37,10 @@ public class SimpleByteBufferStore implements ReadableStore, WritableStore {
 	@Override
 	public void pushByteOrder(SerializationByteOrder bo) {
 		_sb_stack.push(bo);
-		if (bo != SerializationByteOrder.NEUTRAL) {
-			switch (bo) {
-			case BIG_ENDIAN: _buf.order(ByteOrder.BIG_ENDIAN); break;
-			case LITTLE_ENDIAN: _buf.order(ByteOrder.LITTLE_ENDIAN); break;
-			}
+		switch (bo) {
+		case NEUTRAL: break;
+		case BIG_ENDIAN: _buf.order(ByteOrder.BIG_ENDIAN); break;
+		case LITTLE_ENDIAN: _buf.order(ByteOrder.LITTLE_ENDIAN); break;
 		}
 	}
 	

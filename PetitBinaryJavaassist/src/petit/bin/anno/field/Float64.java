@@ -5,9 +5,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import javassist.CtField;
-import petit.bin.MetaAgentFactory.CodeFragments;
-import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 import petit.bin.anno.MemberDefaultType;
 import petit.bin.anno.SupportType;
 
@@ -18,24 +15,10 @@ import petit.bin.anno.SupportType;
 	double.class})
 public @interface Float64 {
 	
-	public static final class _MA extends MemberAnnotationMetaAgent {
+	public static final class _MA extends PrimitiveTypeMetaAgent {
 		
-		@Override
-		public String makeReaderSource(CtField field) {
-			return new StringBuilder()
-					.append(CodeFragments.ACCESS_INSTANCE.of(field.getName()))
-					.append(" = ")
-					.append(CodeFragments.READER.invoke("readDouble"))
-					.append(';')
-					.toString();
-		}
-		
-		@Override
-		public String makeWriterSource(CtField field) {
-			return new StringBuilder()
-					.append(CodeFragments.WRITER.invoke("writeDouble", CodeFragments.ACCESS_INSTANCE.of(field.getName())))
-					.append(';')
-					.toString();
+		public _MA() {
+			super("Double", "double", null);
 		}
 		
 	}

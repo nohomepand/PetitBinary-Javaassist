@@ -57,7 +57,7 @@ public final class CodeGenerator {
 		/**
 		 * シリアライズクラスに指示された {@link Struct} アノテーションのインスタンスを持つ変数名(多分インスタンスフィールド)
 		 */
-		VarAccessStructAnnotation("_anno"),
+		VarTargetStructAnnotation("_anno"),
 		
 		/**
 		 * {@link ReadableStore} のインスタンスを持つ変数名(多分メソッドのパラメータ)
@@ -88,6 +88,16 @@ public final class CodeGenerator {
 		 * {@link SerializeAdapter} のcanonical name
 		 */
 		TypeSerAdap(KnownCtClass.ISERIALIZE_ADAPTER.BINARYNAME),
+		
+		/**
+		 * {@link ReadableStore} のcanonical name
+		 */
+		TypeReader(ReadableStore.class.getCanonicalName()),
+		
+		/**
+		 * {@link WritableStore} のcanonical name
+		 */
+		typeWriter(WritableStore.class.getCanonicalName()),
 		;
 		
 		/**
@@ -139,50 +149,18 @@ public final class CodeGenerator {
 	/**
 	 * $で囲まれた文字列を得るための正規表現
 	 */
-	public static final Pattern ID_REGEX = Pattern.compile("\\$(.+?)\\$");
+	public static final Pattern ID_REGEX = Pattern.compile("\\$($.*?|.+?)\\$");
 	
 	private final Map<String, String> _mapper;
 	
-	public CodeGenerator(final CtField field) throws CannotCompileException {
+	public CodeGenerator() throws CannotCompileException {
 		_mapper = new HashMap<>();
 		
-		try {
-			if (field != null) {
-				map(CGIDs.VarField, CodeFragments.VarTarget.of(field.getName()));
-				
-				final Pair<Class<?>, Boolean> toc = Util.toClass(field.getType());
-				map(CGIDs.TypeField, toc.FIRST.getCanonicalName());
-				if (toc.FIRST.isArray()) map(CGIDs.TypeFieldComponent, toc.FIRST.getComponentType().getCanonicalName());
-				
-				if (field.getType().isArray()) {
-					String size_val = null;
-					final ArraySizeConstant i1 = (ArraySizeConstant) field.getAnnotation(ArraySizeConstant.class);
-					if (i1 != null)
-						size_val = Integer.toString(i1.value());
-					
-					final ArraySizeByField i2 = (ArraySizeByField) field.getAnnotation(ArraySizeByField.class);
-					if (i2 != null)
-						size_val = CodeFragments.VarTarget.of(field.getName());
-					
-					final ArraySizeByMethod i3 = (ArraySizeByMethod) field.getAnnotation(ArraySizeByMethod.class);
-					if (i3 != null)
-						size_val = CodeFragments.VarTarget.ID + "." + i3.value() + "(" + CodeFragments.VarReader.ID + ")";
-					
-					if (size_val == null)
-						throw new CannotCompileException("No array size indicator found for " + field);
-				}
-			}
-			
-			for (final CodeFragments elm : CodeFragments.values())
-				map(elm, elm.ID);
-		} catch (CannotCompileException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new CannotCompileException(e);
-		}
+		for (final CodeFragments elm : CodeFragments.values())
+			map(elm, elm.ID);
 	}
 	
-	private final void map(final Enum<?> id, final String replacement) {
+	public final void map(final Enum<?> id, final String replacement) {
 		_mapper.put(id.name().toLowerCase(), replacement);
 	}
 	
@@ -190,25 +168,73 @@ public final class CodeGenerator {
 		_mapper.put(id.toLowerCase(), replacement);
 	}
 	
+	public final void attachField(final CtField field) throws CannotCompileException {
+		try {
+			if (field != null) {
+				map(CGIDs.VarField, CodeFragments.VarTarget.of(field.getName()));
+				
+				final Pair<Class<?>, Boolean> toc = Util.toClass(field.getType());
+				map(CGIDs.TypeField, toc.FIRST.getCanonicalName());
+				if (toc.FIRST.isArray()) {
+					map(CGIDs.TypeFieldComponent, toc.FIRST.getComponentType().getCanonicalName());
+				}
+				
+				if (field.getType().isArray()) {
+					String size_expr = null;
+					final ArraySizeConstant i1 = (ArraySizeConstant) field.getAnnotation(ArraySizeConstant.class);
+					if (i1 != null)
+						size_expr = Integer.toString(i1.value());
+					
+					final ArraySizeByField i2 = (ArraySizeByField) field.getAnnotation(ArraySizeByField.class);
+					if (i2 != null)
+						size_expr = CodeFragments.VarTarget.of(field.getName());
+					
+					final ArraySizeByMethod i3 = (ArraySizeByMethod) field.getAnnotation(ArraySizeByMethod.class);
+					if (i3 != null)
+						size_expr = CodeFragments.VarTarget.ID + "." + i3.value() + "(" + CodeFragments.VarReader.ID + ")";
+					
+					if (size_expr == null)
+						throw new CannotCompileException("No array size indicator found for " + field);
+					map(CGIDs.ExprFieldSizeGetter, size_expr);
+				}
+			}
+		} catch (CannotCompileException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new CannotCompileException(e);
+		}
+	}
+	
+	public final void detachField() {
+		for (final CGIDs elm : CGIDs.values())
+			_mapper.remove(elm.name());
+	}
+	
 	public final String replaceAll(final String src) {
 		String result = src;
 		Matcher m = ID_REGEX.matcher(result);
 		while (m.find()) {
 			final String found = m.group(1);
-			final String replacement = _mapper.get(found.toLowerCase());
-			if (replacement == null)
-				throw new IllegalArgumentException(found + " is not mapped");
-			result = m.replaceFirst(replacement);
+			if (found.equals("$"))
+				result = m.replaceFirst("\0");
+			else {
+				final String replacement = _mapper.get(found.toLowerCase());
+				if (replacement == null)
+					throw new IllegalArgumentException(found + " is not mapped");
+				result = m.replaceFirst(replacement);
+			}
 			m = ID_REGEX.matcher(result);
 		}
+		result = result.replace('\0', '$');
 		return result;
 	}
 	public static void main(String[] args) throws Exception {
-		final CodeGenerator cg = new CodeGenerator(ClassPool.getDefault().getOrNull("petit.bin.test.Test1").getField("v5"));
+		final CodeGenerator cg = new CodeGenerator();
+		cg.attachField(ClassPool.getDefault().getOrNull("petit.bin.test.Test1").getField("v5"));
 		final String s = "{" + "\n" +
 				"$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeField.class);" + "\n" + 
 				"$varField$ = ($typeField$) sa.read($varReader$);" +  "\n" +
-				"}";
+				"$$$1 = $typeSerAdap$}";
 		
 		System.out.println(cg.replaceAll(s));
 		for (final Entry<String, String> ent : cg._mapper.entrySet())

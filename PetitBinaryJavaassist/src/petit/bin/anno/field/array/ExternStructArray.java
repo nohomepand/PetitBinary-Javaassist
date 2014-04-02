@@ -7,8 +7,8 @@ import java.lang.annotation.Target;
 
 import javassist.CannotCompileException;
 import javassist.CtField;
-import petit.bin.MetaAgentFactory.CodeFragments;
-import petit.bin.MetaAgentFactory.CodeFragmentsSynonym;
+import javassist.CtMethod;
+import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -25,7 +25,7 @@ public @interface ExternStructArray {
 	public static final class _MA extends MemberAnnotationMetaAgent {
 		
 		@Override
-		public String makeReaderSource(CtField field) throws CannotCompileException {
+		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
 			/*
 			 * {
 			 *     int size = <ind>;
@@ -47,40 +47,62 @@ public @interface ExternStructArray {
 			 * }
 			 */
 			try {
-				final CodeFragmentsSynonym syno = new CodeFragmentsSynonym(field);
-				final StringBuilder sb = new StringBuilder();
-				sb.append("{")
-					.append("int size = ").append(makeArraySizeIndicator(field)).append(";\n")
-					.append("if (").append(syno.field).append(" == null || ").append(syno.fieldLen).append(" != size)\n")
-							.append("\t").append(syno.field).append(" = new ").append(syno.fieldComponentType).append("[size];\n")
-					.append(syno.assignComponentTypeSerializeAdapter).append("\n")
-					.append("for (int i = 0; i < size; i++)\n");
-				
 				final ExternStructArray esaa = (ExternStructArray) field.getAnnotation(ExternStructArray.class);
 				if (esaa != null && esaa.value() != null && !esaa.value().isEmpty()) {
 					// ExternStructArray.value() is present
-					sb.append("\t{")
-						.append(syno.fieldElm)
-							.append(" = (").append(syno.fieldComponentType).append(") ").append(CodeFragments.ACCESS_INSTANCE.invoke(esaa.value())).append(";")
-						.append(CodeFragments.SERIALIZER.invoke("read", syno.fieldElm, CodeFragments.READER.ID)).append(";")
-						.append("}\n");
+					final CtMethod return_type_class_method = getCtMethod(field.getDeclaringClass(), esaa.value(), Class.class);
+					cg.map("esaa", esaa.value());
+					if (return_type_class_method != null) {
+						// esa.value() points to a (?)Ljava/lang/Class; method
+						return cg.replaceAll(
+								"{" +
+								"	int size = $exprFieldSizeGetter$;" +
+								"	if ($varField$ == null || $varField$.length != size)" +
+								"		$varField$ = new $typeFieldComponent$[size];" +
+								
+								"	Class c = $varTarget$.$esaa$();" +
+								"	if (c != null) {" +
+								"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer(c);" +
+								"		for (int i = 0; i < size; i++)" +
+								"			$varField$[i] = ($typeFieldComponent$) sa.read($varReader$);" +
+								"	}" +
+								"}");
+					} else {
+						return cg.replaceAll(
+								"{" +
+								"	int size = $exprFieldSizeGetter$;" +
+								"	if ($varField$ == null || $varField$.length != size)" +
+								"		$varField$ = new $typeFieldComponent$[size];" +
+								
+								"	for (int i = 0; i < size; i++) {" +
+								"		$varField$[i] = ($typeFieldComponent$) $varTarget$.$esaa$();" +
+								"		if ($varField$[i] != null) {" +
+								"			$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($varField$[i].getClass());" +
+								"			sa.read($varField$, $varReader$);" +
+								"		}" +
+								"	}" +
+								"}");
+					}
 				} else {
 					// ExternStructArray.value() is NOT present
-					sb.append("\t")
-						.append(syno.fieldElm)
-							.append(" = (").append(syno.fieldComponentType).append(") ").append(CodeFragments.SERIALIZER.invoke("read", CodeFragments.READER.ID))
-						.append(";\n");
+					return cg.replaceAll(
+							"{" +
+							"	int size = $exprFieldSizeGetter$;" +
+							"	if ($varField$ == null || $varField$.length != size)" +
+							"		$varField$ = new $typeFieldComponent$[size];" +
+							
+							"	$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeFieldComponent$.class);" +
+							"	for (int i = 0; i < size; i++)" +
+							"		$varField$[i] = sa.read($varReader$);" +
+							"}");
 				}
-				
-				sb.append("}");
-				return sb.toString();
 			} catch (Exception e) {
 				throw new CannotCompileException(e);
 			}
 		}
 		
 		@Override
-		public String makeWriterSource(CtField field) throws CannotCompileException {
+		public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
 			/*
 			 * if (<vVarField> != null) {
 			 *     <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<vVarField's class>);
@@ -88,14 +110,32 @@ public @interface ExternStructArray {
 			 *        sa.write(<vVarField[i]>, <dst>);
 			 * }
 			 */
-			final CodeFragmentsSynonym syno = new CodeFragmentsSynonym(field);
-			return new StringBuilder()
-					.append("if (").append(syno.field).append(" != null) {")
-						.append(syno.assignComponentTypeSerializeAdapter)
-						.append("for (int i = 0; i < ").append(syno.fieldLen).append("; i++)")
-							.append(CodeFragments.SERIALIZER.invoke("write", syno.fieldElm, CodeFragments.WRITER.ID)).append(";")
-					.append("}")
-					.toString();
+			try {
+				if (field.hasAnnotation(ExternStructArray.class)) { 
+					// field は内部で field's type とは異なる型のインスタンスを持っているかもしれない
+					return cg.replaceAll(
+							"if ($varField$ != null) {" +
+							"	$typeSerAdap$ sa;" +
+							"	for (int i = 0; i < $varField$.length; i++) {" +
+							"		if ($varField$[i] != null) {" +
+							"			sa = $typeSerAdapFactory$.getSerializer($varField$[i].getClass());" +
+							"			sa.write($varField$[i], $varWriter$);" +
+							"		}" +
+							"	}" +
+							"}");
+				} else {
+					// field の内部は全て field's type と同一
+					return cg.replaceAll(
+							"if ($varField$ != null) {" +
+							"	$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeFieldComponent$.class);" +
+							"	for (int i = 0; i < $varField$.length; i++)" +
+							"		if ($varField$[i] != null)" +
+							"			sa.write($varField$[i], $varWriter$);" +
+							"}");
+				}
+			} catch (Exception e) {
+				throw new CannotCompileException(e);
+			}
 		}
 		
 	}

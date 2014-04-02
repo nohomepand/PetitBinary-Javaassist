@@ -8,6 +8,7 @@ import petit.bin.anno.Struct;
 import petit.bin.anno.StructMember;
 import petit.bin.anno.array.ArraySizeByMethod;
 import petit.bin.anno.array.ArraySizeConstant;
+import petit.bin.anno.field.ExternStruct;
 import petit.bin.anno.field.UInt16;
 import petit.bin.example.AbstractExample;
 import petit.bin.store.ReadableStore;
@@ -31,7 +32,12 @@ public class Test1 {
 	protected int v4;
 	
 	@StructMember(4)
+	@ExternStruct("instantiator")
 	protected Inner1 v5;
+	
+	protected final Inner1 instantiator() {
+		return new Inner1();
+	}
 	
 	@StructMember(5)
 	@ArraySizeConstant(5)
