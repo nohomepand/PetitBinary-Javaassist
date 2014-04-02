@@ -14,7 +14,7 @@ import javassist.NotFoundException;
 import petit.bin.MetaAgentFactory.CodeFragments;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 import petit.bin.util.DefaultClassPool;
-import petit.bin.util.JavaassistUtil;
+import petit.bin.util.Util;
 import petit.bin.util.KnownCtClass;
 
 /**
@@ -67,17 +67,17 @@ public final class PetitSerializer {
 			adapter_clazz.addInterface(KnownCtClass.ISERIALIZE_ADAPTER.CT_CLAZZ);
 			
 			// add fields to adapter_clazz
-			adapter_clazz.addField(JavaassistUtil.createPrivateFinalField(KnownCtClass.ACLASS.CT_CLAZZ, CodeFragments.ACCESS_CLASS.ID, adapter_clazz));
-			adapter_clazz.addField(JavaassistUtil.createPrivateFinalField(KnownCtClass.INSTANTIATOR.CT_CLAZZ, CodeFragments.ACCESS_INSTANTIATOR.ID, adapter_clazz));
-			adapter_clazz.addField(JavaassistUtil.createPrivateFinalField(KnownCtClass.STRUCT.CT_CLAZZ, CodeFragments.ACCESS_STRUCTANNO.ID, adapter_clazz));
+			adapter_clazz.addField(Util.createPrivateFinalField(KnownCtClass.ACLASS.CT_CLAZZ, CodeFragments.ACCESS_CLASS.ID, adapter_clazz));
+			adapter_clazz.addField(Util.createPrivateFinalField(KnownCtClass.INSTANTIATOR.CT_CLAZZ, CodeFragments.ACCESS_INSTANTIATOR.ID, adapter_clazz));
+			adapter_clazz.addField(Util.createPrivateFinalField(KnownCtClass.STRUCT.CT_CLAZZ, CodeFragments.ACCESS_STRUCTANNO.ID, adapter_clazz));
 			
 			// create constructor <init>(Class) of adapter_clazz
 			final CtConstructor adapter_ctor = new CtConstructor(new CtClass[] {KnownCtClass.ACLASS.CT_CLAZZ}, adapter_clazz);
 			adapter_ctor.setModifiers(Modifier.PUBLIC);
-			adapter_ctor.setBody(JavaassistUtil.join(
+			adapter_ctor.setBody(Util.join(
 					"{",
 						CodeFragments.ACCESS_CLASS.ID, " = $1;",
-						CodeFragments.ACCESS_INSTANTIATOR.ID, " = ", CodeFragments.REFLECTIONUTIL.invoke("getInstantiator", "_clazz"), ";",
+						CodeFragments.ACCESS_INSTANTIATOR.ID, " = ", CodeFragments.UTIL.invoke("getInstantiator", "_clazz"), ";",
 						CodeFragments.ACCESS_STRUCTANNO.ID, " = ", CodeFragments.ACCESS_CLASS.invoke("getAnnotation", KnownCtClass.STRUCT.CANONICALNAME + ".class"), ";",
 						"if (", CodeFragments.ACCESS_STRUCTANNO.ID, " == null) throw new IllegalArgumentException(\"",
 							KnownCtClass.STRUCT.CANONICALNAME," annotation is not present\");",
@@ -89,10 +89,10 @@ public final class PetitSerializer {
 			adapter_clazz.addMethod(CtMethod.make("public final Class getTargetClass() { return _clazz; }", adapter_clazz));
 			
 			// add serialization methods
-			final List<CtField> managed_fields = JavaassistUtil.getManagedFields(DefaultClassPool.CP, clazz);
+			final List<CtField> managed_fields = Util.getManagedFields(DefaultClassPool.CP, clazz);
 			
 			// for reader
-			adapter_clazz.addMethod(CtMethod.make(JavaassistUtil.join(
+			adapter_clazz.addMethod(CtMethod.make(Util.join(
 					"public final Object read(Object ao, ", KnownCtClass.READABLE_STORE.CANONICALNAME, " ", CodeFragments.READER.ID, ") throws Exception {",
 						CodeFragments.READER.invoke("pushByteOrder", CodeFragments.ACCESS_STRUCTANNO.invoke("byteOrder")), ";",
 						CodeFragments.READER.invoke("pushType", CodeFragments.ACCESS_CLASS.ID), ";",
@@ -103,14 +103,14 @@ public final class PetitSerializer {
 					"}"
 					), adapter_clazz));
 			
-			adapter_clazz.addMethod(CtMethod.make(JavaassistUtil.join(
+			adapter_clazz.addMethod(CtMethod.make(Util.join(
 					"public final Object read(", KnownCtClass.READABLE_STORE.CANONICALNAME, " ", CodeFragments.READER.ID, ") throws Exception {",
 						"return read(", CodeFragments.ACCESS_INSTANTIATOR.invoke("newInstance"), ", ", CodeFragments.READER.ID, ");",
 					"}"
 					), adapter_clazz));
 			
 			// for writer
-			adapter_clazz.addMethod(CtMethod.make(JavaassistUtil.join(
+			adapter_clazz.addMethod(CtMethod.make(Util.join(
 					"public final void write(Object ao, ", KnownCtClass.WRITABLE_STORE.CANONICALNAME, " ", CodeFragments.WRITER.ID, ") throws Exception {",
 						CodeFragments.WRITER.invoke("pushByteOrder", CodeFragments.ACCESS_STRUCTANNO.invoke("byteOrder")), ";",
 						CodeFragments.WRITER.invoke("pushType", CodeFragments.ACCESS_CLASS.ID), ";",
@@ -164,7 +164,7 @@ public final class PetitSerializer {
 			ma.checkSupportTypes(field);
 			sb.append(ma.makeWriterSource(field)).append("\n");
 		}
-//		System.err.println(sb.toString());
+		System.err.println(sb.toString());
 		return sb.toString();
 	}
 	

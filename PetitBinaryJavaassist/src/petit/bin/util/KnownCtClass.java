@@ -41,11 +41,6 @@ public enum KnownCtClass {
 	 * {@link Instantiator} に対応するもの
 	 */
 	INSTANTIATOR(Instantiator.class),
-	
-	/**
-	 * {@link ReflectionUtil} に対応するもの
-	 */
-	REFLECTIONUTIL(ReflectionUtil.class),
 
 	/**
 	 * {@link PetitSerializer} のcanonical name

@@ -1,9 +1,5 @@
 package petit.bin;
 
-import static petit.bin.MetaAgentFactory.CodeFragments.SERIALIZE_ADAPTER;
-import static petit.bin.MetaAgentFactory.CodeFragments.SERIALIZE_ADAPTER_FACTORY;
-import static petit.bin.util.KnownCtClass.ISERIALIZE_ADAPTER;
-
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,14 +9,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javassist.CannotCompileException;
+import javassist.CtClass;
 import javassist.CtField;
+import javassist.CtMethod;
 import javassist.NotFoundException;
 import petit.bin.anno.MemberDefaultType;
-import petit.bin.anno.Struct;
 import petit.bin.anno.SupportType;
-import petit.bin.anno.array.ArraySizeByField;
-import petit.bin.anno.array.ArraySizeByMethod;
-import petit.bin.anno.array.ArraySizeConstant;
 import petit.bin.anno.field.ExternStruct;
 import petit.bin.anno.field.Float32;
 import petit.bin.anno.field.Float64;
@@ -39,13 +33,8 @@ import petit.bin.anno.field.array.Int16Array;
 import petit.bin.anno.field.array.Int32Array;
 import petit.bin.anno.field.array.Int64Array;
 import petit.bin.anno.field.array.Int8Array;
-import petit.bin.store.ReadableStore;
-import petit.bin.store.WritableStore;
-import petit.bin.util.JavaassistUtil;
-import petit.bin.util.KnownCtClass;
 import petit.bin.util.Pair;
-import petit.bin.util.ReflectionUtil;
-import petit.bin.util.instor.Instantiator;
+import petit.bin.util.Util;
 
 /**
  * {@link MemberAnnotationMetaAgent} のファクトリ
@@ -137,7 +126,7 @@ public final class MetaAgentFactory {
 		
 		// use default
 		try {
-			final Pair<Class<?>, Boolean> clazz = JavaassistUtil.toClass(field.getType());
+			final Pair<Class<?>, Boolean> clazz = Util.toClass(field.getType());
 			if (clazz.SECOND == null) {
 				return _default_agent_map.get(clazz.FIRST);
 			} else if (clazz.SECOND) {
@@ -151,218 +140,7 @@ public final class MetaAgentFactory {
 		throw new UnsupportedOperationException("Cannot find a meta-agent for " + field.getSignature());
 	}
 	
-	/**
-	 * ソースコード中の識別子の定数
-	 * 
-	 * @author 俺用
-	 * @since 2014/03/31 PetitBinaryJavaassist
-	 *
-	 */
-	public static enum CodeFragments {
-		/**
-		 * シリアライズクラス型のインスタンスを持つ変数名(多分メソッドのパラメータ)
-		 */
-		ACCESS_INSTANCE("_tgt"),
-		
-		/**
-		 * シリアライズクラス型のインスタンスを生成する {@link Instantiator} 型のインスタンスを持つ変数名(多分インスタンスフィールド)
-		 */
-		ACCESS_INSTANTIATOR("_instor"),
-		
-		/**
-		 * シリアライズクラス型の {@link Class} のインスタンスを持つ変数名(多分インスタンスフィールド)
-		 */
-		ACCESS_CLASS("_clazz"),
-		
-		/**
-		 * シリアライズクラスに指示された {@link Struct} アノテーションのインスタンスを持つ変数名(多分インスタンスフィールド)
-		 */
-		ACCESS_STRUCTANNO("_anno"),
-		
-		/**
-		 * {@link ReadableStore} のインスタンスを持つ変数名(多分メソッドのパラメータ)
-		 */
-		READER("src"),
-		
-		/**
-		 * {@link WritableStore} のインスタンスを持つ変数名(多分メソッドのパラメータ)
-		 */
-		WRITER("dst"),
-		
-		/**
-		 * {@link SerializeAdapter} のインスタンスを持つ変数名(多分ローカル変数)
-		 */
-		SERIALIZE_ADAPTER("sa"),
-		
-		/**
-		 * {@link Instantiator} のcanonical name
-		 */
-		INSTANTIATOR(KnownCtClass.INSTANTIATOR.BINARYNAME),
-		
-		/**
-		 * {@link ReflectionUtil} のcanonical name
-		 */
-		REFLECTIONUTIL(KnownCtClass.REFLECTIONUTIL.BINARYNAME),
-		
-		/**
-		 * {@link PetitSerializer} のcanonical name
-		 */
-		SERIALIZE_ADAPTER_FACTORY(KnownCtClass.SERIALIZE_ADAPTER_FACTORY.BINARYNAME),
-		
-		/**
-		 * {@link SerializeAdapter} のcanonical name
-		 */
-		ISERIALIZE_ADAPTER(KnownCtClass.ISERIALIZE_ADAPTER.BINARYNAME),
-		;
-		
-		/**
-		 * 識別子
-		 */
-		public final String ID;
-		
-		private CodeFragments(final String id) {
-			ID = id;
-		}
-		
-		/**
-		 * {@link #ID}.expr な文字列を返す
-		 * 
-		 * @param expr 式
-		 * @return {@link #ID}.expr な文字列
-		 */
-		public final String of(final String expr) {
-			return ID + "." + expr;
-		}
-		
-		/**
-		 * {@link #ID}.expr.length な文字列を返す
-		 * 
-		 * @param expr 式
-		 * @return {@link #ID}.expr.length な文字列
-		 */
-		public final String ofArrayLength(final String expr) {
-			return ID + "." + expr + ".length";
-		}
-		
-		/**
-		 * {@link #ID}.expr[index_expr] な文字列を返す
-		 * 
-		 * @param expr 式
-		 * @param index_expr インデックス
-		 * @return {@link #ID}.expr.length な文字列
-		 */
-		public final String ofElement(final String expr, final String index_expr) {
-			return ID + "." + expr + "[" + index_expr + "]";
-		}
-		
-		/**
-		 * {@link #ID}.name() な文字列を返す
-		 * 
-		 * @param name メソッド名
-		 * @return {@link #ID}.name() な文字列
-		 */
-		public final String invoke(final String name) {
-			return new StringBuilder().append(ID).append('.').append(name).append("()").toString();
-		}
-		
-		/**
-		 * {@link #ID}.name(args[0], ...) な文字列を返す
-		 * 
-		 * @param name メソッド名
-		 * @param args 引数リスト
-		 * @return {@link #ID}.name(args[0], ...) な文字列
-		 */
-		public final String invoke(final String name, final String ... args) {
-			final StringBuilder sb = new StringBuilder();
-			sb.append(ID).append('.').append(name).append('(');
-			for (int i = 0; i < args.length; i++) {
-				sb.append(args[i]);
-				if (i != args.length - 1)
-					sb.append(',');
-			}
-			return sb.append(')').toString();
-		}
-		
-	}
 	
-	/**
-	 * {@link CodeFragments} を使ってアクセスすると非常に長くなるので，そのシノニムを表すためのもの
-	 * 
-	 * @author 俺用
-	 * @since 2014/04/01 PetitBinaryJavaassist
-	 *
-	 */
-	public static final class CodeFragmentsSynonym {
-		
-		/**
-		 * instance.field_name な文字列
-		 */
-		public final String field;
-		
-		/**
-		 * instance.field_name[i] な文字列
-		 */
-		public final String fieldElm;
-		
-		/**
-		 * instance.field_name.length な文字列
-		 */
-		public final String fieldLen;
-		
-		/**
-		 * instance.field_name のcanonical な型名を表す文字列
-		 */
-		public final String fieldType;
-		
-		/**
-		 * instance.field_name が配列の場合，そのコンポーネント型のcanonical な型名を表す文字列<br />
-		 * 配列でない場合は null
-		 */
-		public final String fieldComponentType;
-		
-		/**
-		 * {@link SerializeAdapter} local_var = {@link PetitSerializer#getSerializer(Class)}({@link #fieldType}); な文字列
-		 */
-		public final String assignFieldTypeSerializeAdapter;
-		
-		/**
-		 * {@link SerializeAdapter} local_var = {@link PetitSerializer#getSerializer(Class)}({@link #fieldComponentType}); な文字列
-		 */
-		public final String assignComponentTypeSerializeAdapter;
-		
-		/**
-		 * 初期化
-		 * 
-		 * @param f 対象のフィールド
-		 * @throws ClassNotFoundException
-		 * @throws NotFoundException
-		 */
-		public CodeFragmentsSynonym(final CtField f) throws CannotCompileException {
-			try {
-				field = CodeFragments.ACCESS_INSTANCE.of(f.getName());
-				fieldElm = CodeFragments.ACCESS_INSTANCE.ofElement(f.getName(), "i");
-				fieldLen = CodeFragments.ACCESS_INSTANCE.ofArrayLength(f.getName());
-				
-				final Pair<Class<?>, Boolean> toc = JavaassistUtil.toClass(f.getType());
-				fieldType = toc.FIRST.getCanonicalName();
-				fieldComponentType = toc.FIRST.isArray() ? toc.FIRST.getComponentType().getCanonicalName() : null;
-				assignFieldTypeSerializeAdapter = new StringBuilder().append(ISERIALIZE_ADAPTER.CANONICALNAME).append(" ")
-							.append(SERIALIZE_ADAPTER.ID)
-							.append(" = ").append(SERIALIZE_ADAPTER_FACTORY.invoke("getSerializer", fieldType + ".class"))
-						.append(";")
-						.toString();
-				assignComponentTypeSerializeAdapter = new StringBuilder().append(ISERIALIZE_ADAPTER.CANONICALNAME).append(" ")
-						.append(SERIALIZE_ADAPTER.ID)
-						.append(" = ").append(SERIALIZE_ADAPTER_FACTORY.invoke("getSerializer", fieldComponentType + ".class"))
-					.append(";")
-					.toString();
-			} catch (Exception e) {
-				throw new CannotCompileException(e);
-			}
-			
-		}
-		
-	}
 	
 	/**
 	 * シリアライズクラスのメンバのアノテーション({@link UInt8}など)のメタ情報を保存し，
@@ -406,14 +184,14 @@ public final class MetaAgentFactory {
 		/**
 		 * 対象のフィールドが正しい型か検証する
 		 * 
-		 * @param field 対象のフィールド
+		 * @param vVarField 対象のフィールド
 		 */
 		public final void checkSupportTypes(final CtField field) throws CannotCompileException {
 			if (_support_types == null || _support_types.isEmpty())
 				return; // any type is ok
 			
 			try {
-				final Pair<Class<?>, Boolean> type = JavaassistUtil.toClass(field.getType());
+				final Pair<Class<?>, Boolean> type = Util.toClass(field.getType());
 				for (final Class<?> vt : _support_types)
 					if (vt.equals(type.FIRST))
 						return;
@@ -445,49 +223,42 @@ public final class MetaAgentFactory {
 		}
 		
 		/**
-		 * {@link ArraySizeConstant} または {@link ArraySizeByField} または {@link ArraySizeByMethod} によって指示される対象のフィールドの配列の大きさを得るためのコードの断片を得る<br />
-		 * 典型的には次のようなものが得られる
-		 * <pre>
-		 * {@literal @ArraySizeConstant(10)} = "10"
-		 * {@literal @ArraySizeByField("foo")} = "_1.foo"
-		 * {@literal @ArraySizeByMethod("bar")} = "_1.bar(_2)"
-		 * </pre>
-		 * _1や_2などの識別子の意味は {@link CodeFragments} で定義されている
+		 * メソッドの参照を得る
 		 * 
-		 * @param field 対象のフィールド
-		 * @return 対象のフィールドの配列の大きさを得るためのコードの断片
-		 * @throws CannotCompileException
+		 * @param clazz メソッドが定義されている，またはメソッドが可視なクラス
+		 * @param name メソッド名
+		 * @param return_type 戻り値の型
+		 * @param params パラメータ
+		 * @return メソッドの参照(親クラスで定義されているものの場合もある)または検索できない場合は null
 		 */
-		public final String makeArraySizeIndicator(final CtField field) throws CannotCompileException {
-			try {
-				{
-					final ArraySizeConstant i1 = (ArraySizeConstant) field.getAnnotation(ArraySizeConstant.class);
-					if (i1 != null) {
-						return Integer.toString(i1.value());
-					}
-				} {
-					final ArraySizeByField i2 = (ArraySizeByField) field.getAnnotation(ArraySizeByField.class);
-					if (i2 != null) {
-						return CodeFragments.ACCESS_INSTANCE.of(field.getName());
-					}
-				} {
-					final ArraySizeByMethod i3 = (ArraySizeByMethod) field.getAnnotation(ArraySizeByMethod.class);
-					if (i3 != null) {
-						return CodeFragments.ACCESS_INSTANCE.invoke(i3.value(), CodeFragments.READER.ID);
-					}
-				}
-				
-			} catch (ClassNotFoundException e) {
-				throw new CannotCompileException(e);
-			}
+		public final CtMethod getCtMethod(final CtClass clazz, final String name, final Class<?> return_type, final Class<?> ... params) {
+			if (clazz == null)
+				throw new NullPointerException("Argument clazz must not be null");
+			if (name == null)
+				throw new NullPointerException("Argument name must not be null");
+			if (return_type == null)
+				throw new NullPointerException("Argument return_type must not be null");
+			if (params == null)
+				throw new NullPointerException("Argument params must not be null");
 			
-			throw new CannotCompileException("No array size indicator found for " + field);
+			
+			final StringBuilder sig = new StringBuilder();
+			sig.append("(");
+			for (final Class<?> param : params)
+				sig.append(param.getName());
+			sig.append(")");
+			sig.append(return_type.getName());
+			try {
+				return clazz.getMethod(name, sig.toString());
+			} catch (NotFoundException e) {
+				return null;
+			}
 		}
 		
 		/**
 		 * 対象のメンバに対する読み込みを表すソースコードを生成する
 		 * 
-		 * @param field 対象のメンバ
+		 * @param vVarField 対象のメンバ
 		 * @return 対象のメンバに対する読み込みを表すソースコード
 		 */
 		public abstract String makeReaderSource(final CtField field) throws CannotCompileException;
@@ -495,7 +266,7 @@ public final class MetaAgentFactory {
 		/**
 		 * 対象のメンバを書き込むことを表すソースコードを生成する
 		 * 
-		 * @param field 対象のメンバ
+		 * @param vVarField 対象のメンバ
 		 * @return 対象のメンバを書き込むことを表すソースコード
 		 */
 		public abstract String makeWriterSource(final CtField field) throws CannotCompileException;

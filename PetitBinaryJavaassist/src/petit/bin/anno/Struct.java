@@ -1,5 +1,6 @@
 package petit.bin.anno;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
@@ -18,6 +19,7 @@ import petit.bin.store.Store.SerializationByteOrder;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Inherited
+@Documented
 public @interface Struct {
 	
 	/**

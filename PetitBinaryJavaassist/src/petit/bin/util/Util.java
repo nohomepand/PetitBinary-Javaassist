@@ -15,8 +15,11 @@ import javassist.CtField;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import petit.bin.anno.StructMember;
+import petit.bin.util.instor.Instantiator;
+import petit.bin.util.instor.NullaryInstantiator;
+import petit.bin.util.instor.UnsafeInstantiator;
 
-public class JavaassistUtil {
+public class Util {
 	
 	/**
 	 * {@link #getManagedFields(ClassPool, Class)} で private なフィールドをチェックする場合は true
@@ -27,6 +30,8 @@ public class JavaassistUtil {
 	 * {@link CtClass} からプリミティブ型およびプリミティブ型の配列へのマッピング
 	 */
 	private static final Map<CtClass, Class<?>> _primitive_ctclass_map;
+	
+	private static final Map<Class<?>, Instantiator> _class_instantiator_map;
 	
 	static {
 		_primitive_ctclass_map = new HashMap<>();
@@ -45,6 +50,8 @@ public class JavaassistUtil {
 		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(long[].class.getName()), long[].class);
 		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(float[].class.getName()), float[].class);
 		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(double[].class.getName()), double[].class);
+		
+		_class_instantiator_map = new HashMap<>();
 	}
 	
 	/**
@@ -166,6 +173,30 @@ public class JavaassistUtil {
 		final CtField field = new CtField(type, name, parent);
 		field.setModifiers(Modifier.PRIVATE | Modifier.FINAL);
 		return field;
+	}
+	
+	/**
+	 * clazz のインスタンスを構築可能な方法を得る
+	 * 
+	 * @param clazz クラス
+	 * @return clazz のインスタンスを構築可能な方法，または構築可能な方法がなければ null
+	 */
+	public static final Instantiator getInstantiator(final Class<?> clazz) {
+		if (_class_instantiator_map.containsKey(clazz)) {
+			return _class_instantiator_map.get(clazz);
+		} else {
+			Instantiator instor = null;
+			try {
+				instor = new NullaryInstantiator(clazz);
+			} catch (Exception e) {
+				if (UnsafeInstantiator.isAvailable())
+					instor = new UnsafeInstantiator(clazz);
+				else
+					instor = null;
+			}
+			_class_instantiator_map.put(clazz, instor);
+			return instor;
+		}
 	}
 	
 }

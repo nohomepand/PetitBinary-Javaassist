@@ -33,7 +33,7 @@ public @interface Int8Boolean {
 		@Override
 		public String makeWriterSource(CtField field) {
 			return new StringBuilder()
-					.append(CodeFragments.WRITER.invoke("writeInt8", "(byte)O(" + CodeFragments.ACCESS_INSTANCE.of(field.getName())) + " ? 1 : 0)")
+					.append(CodeFragments.WRITER.invoke("writeInt8", "(byte) (" + CodeFragments.ACCESS_INSTANCE.of(field.getName()) + " ? 1 : 0)"))
 					.append(';')
 					.toString();
 		}

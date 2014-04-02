@@ -5,32 +5,42 @@ import petit.bin.anno.StructMember;
 import petit.bin.store.Store.SerializationByteOrder;
 
 /**
- * 例1
  * 
  * @author 俺用
  * @since 2014/04/01 PetitBinaryJavaassist
  *
  */
-@Struct(byteOrder = SerializationByteOrder.LITTLE_ENDIAN)
-public class Ex1 extends AbstractExample {
+@Struct(byteOrder = SerializationByteOrder.NEUTRAL)
+public final class Point extends AbstractExample {
 	
 	/**
-	 * public, protected, default なアクセスのフィールドのみが {@link StructMember} を与えられる
+	 * 初期化
+	 * 
+	 * @param x x
+	 * @param y y
 	 */
+	public Point(final int x, final int y) {
+		_x = x;
+		_y = y;
+	}
+	
 	@StructMember(0)
-	protected int int1;
+	protected int _x;
+	
+	@StructMember(1)
+	protected int _y;
 	
 	public static void main(String[] args) throws Exception {
-		final Ex1 ao = new Ex1();
-		ao.int1 = 10;
+		final Point ao = new Point(1, 2);
 		System.out.println(dumpData(testSerializeObject(ao, 100)));
 		
-		/*
+		/* 
 		 * outputs:
-			petit.bin.example.Ex1#int1:ok
+			petit.bin.example.Point#_x:ok
+			petit.bin.example.Point#_y:ok
 			petit.bin.example.AbstractExample#HEX_TABLE:skip (private or not present a StructMember annotation)
 			      | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +A +B  +C +D +E +F
-			     0| 0A 00 00 00                                        |                 |
+			     0| 00 00 00 01  00 00 00 02                           |                 |
 		 */
 	}
 	

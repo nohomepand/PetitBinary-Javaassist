@@ -2,11 +2,15 @@ package petit.bin.example;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Objects;
 
 import petit.bin.PetitSerializer;
 import petit.bin.SerializeAdapter;
+import petit.bin.anno.StructMember;
 import petit.bin.store.impl.SimpleByteBufferStore;
 
 /**
@@ -97,87 +101,26 @@ public abstract class AbstractExample {
 		
 		// se
 		for (Class<?> cur = ao.getClass(); cur != null; cur = cur.getSuperclass()) {
-			
-		}
-		for (final Field field : ReflectionUtil.getVisibleFields(ao.getClass(), VisibilityConstraint.INHERITED_CLASS_VIEWPOINT, null, null)) {
-			if (!field.isAnnotationPresent(StructMember.class)) {
-				System.out.println(field.getDeclaringClass().getCanonicalName() + "#" + field.getName() + " : skip");
-				continue;
+			for (final Field field : cur.getDeclaredFields()) {
+				System.out.print(cur.getCanonicalName() + "#" + field.getName() + ":");
+				if ((field.getModifiers() & Modifier.PRIVATE) != 0 || !field.isAnnotationPresent(StructMember.class)) {
+					System.out.println("skip (private or not present a StructMember annotation)");
+					continue;
+				}
+				field.setAccessible(true);
+				final Object aoValue = field.get(ao);
+				final Object readValue = field.get(read);
+				System.out.println(Objects.deepEquals(aoValue, readValue) ? "ok" : (aoValue + " != " + readValue));
 			}
-			field.setAccessible(true);
-			final Object ao_field = field.get(ao);
-			final Object obj_field = field.get(obj);
-			
-			System.out.println(field.getDeclaringClass().getCanonicalName() + "#" + field.getName() +
-					" : " + (objectEquals(ao_field, obj_field) ? "ok" : (ao_field + " != " + (obj_field.getClass().isArray() ? Arrays.toString((Object[])obj_field) : obj_field.toString()))));
 		}
+		
+		buf.position(0);
+		return buf;
 	}
 	
-//	
-//	/**
-//	 * Tests serialization.
-//	 * This method serialize "ao" to a "buffer",
-//	 * deserialize the "buffer" to "obj",
-//	 * and then checks whether all fields of "ao" and "obj" are equal to another or not.
-//	 * 
-//	 * @param ao an object to check
-//	 * @return serialized data
-//	 * @throws RuntimeException
-//	 */
-//	public static final ByteBuffer checkSerializedObject(final Object ao) throws RuntimeException {
-//		if (ao == null)
-//			throw new NullPointerException("Argument ao must not be null");
-//		
-//		try {
-//			final BinaryAccessor<Object> ba = FACTORY.getBinaryAccessor(ao.getClass());
-//			final InOutByteBuffer buf = new InOutByteBuffer();
-//			
-//			// serialize to buf
-//			ba.writeTo(null, ao, buf);
-//			
-//			// deserialize to obj
-//			final Object obj = ba.readFrom(null, new InOutByteBuffer(buf.getFlippedShallowCopy()));
-//			
-//			// check all of the ao's fields are equal to obj
-//			for (final Field field : ReflectionUtil.getVisibleFields(ao.getClass(), VisibilityConstraint.INHERITED_CLASS_VIEWPOINT, null, null)) {
-//				if (!field.isAnnotationPresent(StructMember.class)) {
-//					System.out.println(field.getDeclaringClass().getCanonicalName() + "#" + field.getName() + " : skip");
-//					continue;
-//				}
-//				field.setAccessible(true);
-//				final Object ao_field = field.get(ao);
-//				final Object obj_field = field.get(obj);
-//				
-//				System.out.println(field.getDeclaringClass().getCanonicalName() + "#" + field.getName() +
-//						" : " + (objectEquals(ao_field, obj_field) ? "ok" : (ao_field + " != " + (obj_field.getClass().isArray() ? Arrays.toString((Object[])obj_field) : obj_field.toString()))));
-//			}
-//			return buf.getFlippedShallowCopy();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//			throw new RuntimeException("Exception caused while checking read/write object", e);
-//		}
-//	}
-//	
-//	/**
-//	 * Java7ならObjectsにありそうなオブジェクト同士の比較
-//	 * 
-//	 * @param x オブジェクト１
-//	 * @param y オブジェクト２
-//	 * @return オブジェクト１と オブジェクト２が実効的に同値なら true
-//	 */
-//	public static final boolean objectEquals(final Object x, final Object y) {
-//		if (x == null) {
-//			return y == null;
-//		} else if (x.getClass().isArray()) {
-//			final int size;
-//			if (!y.getClass().isArray() || (size = Array.getLength(x)) != Array.getLength(y))
-//				return false;
-//			for (int i = 0; i < size; i++)
-//				if (!objectEquals(Array.get(x, i), Array.get(y, i)))
-//					return false;
-//			return true;
-//		} else
-//			return x.equals(y);
-//	}
+	protected final String hoge(int i) {
+		System.out.println(i);
+		return "a";
+	}
 	
 }
