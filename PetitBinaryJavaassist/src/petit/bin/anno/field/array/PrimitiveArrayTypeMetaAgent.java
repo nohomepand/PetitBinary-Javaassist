@@ -25,21 +25,21 @@ public abstract class PrimitiveArrayTypeMetaAgent extends MemberAnnotationMetaAg
 	@Override
 	public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
 		return cg.replaceAll(
-				"{" +
-				"	int size = $exprFieldSizeGetter$;" +
-				"	if ($varField$ == null || $varField$.length != size)" +
-				"		$varField$ = new $typeFieldComponent$[size];" +
-				"	for (int i = 0; i < $varField$.length; i++)" +
-				"		$varField$[i] = $varReader$.read" + STORE_METHOD_SUFFIX + "();" +
+				"{\n" +
+				"	int size = $exprFieldSizeGetter$;\n" +
+				"	if ($varField$ == null || $varField$.length != size)\n" +
+				"		$varField$ = new $typeFieldComponent$[size];\n" +
+				"	for (int i = 0; i < $varField$.length; i++)\n" +
+				"		$varField$[i] = $varReader$.read" + STORE_METHOD_SUFFIX + "();\n" +
 				"}");
 	}
 	
 	@Override
 	public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
 		return cg.replaceAll(
-				"if ($varField$ != null) {" +
-				"	for (int i = 0; i < $varField$.length; i++)" +
-				"		$varWriter$.write" + STORE_METHOD_SUFFIX + "($varField$[i]);" +
+				"if ($varField$ != null) {\n" +
+				"	for (int i = 0; i < $varField$.length; i++)\n" +
+				"		$varWriter$.write" + STORE_METHOD_SUFFIX + "($varField$[i]);\n" +
 				"}");
 	}
 	

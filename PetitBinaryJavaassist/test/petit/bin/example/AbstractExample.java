@@ -11,6 +11,7 @@ import java.util.Objects;
 import petit.bin.PetitSerializer;
 import petit.bin.SerializeAdapter;
 import petit.bin.anno.StructMember;
+import petit.bin.store.WritableStore;
 import petit.bin.store.impl.SimpleByteBufferStore;
 
 /**
@@ -93,7 +94,7 @@ public abstract class AbstractExample {
 		final SimpleByteBufferStore store = new SimpleByteBufferStore(buf);
 		
 		// serialize ao to store
-		ser.write(ao, store);
+		ser.write(ao, (WritableStore) store);
 		
 		// deserialize from store
 		buf.flip();

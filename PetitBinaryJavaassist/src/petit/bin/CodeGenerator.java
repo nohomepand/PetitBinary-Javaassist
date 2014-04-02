@@ -2,12 +2,10 @@ package petit.bin;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javassist.CannotCompileException;
-import javassist.ClassPool;
 import javassist.CtField;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 import petit.bin.anno.Struct;
@@ -123,7 +121,14 @@ public final class CodeGenerator {
 		
 	}
 	
-	public static enum CGIDs {
+	/**
+	 * フィールドが与えられて初めて意味を持つもの
+	 * 
+	 * @author 俺用
+	 * @since 2014/04/02 PetitBinaryJavaassist
+	 *
+	 */
+	public static enum ContextID {
 		/**
 		 * instance.field_name な文字列
 		 */
@@ -153,30 +158,51 @@ public final class CodeGenerator {
 	
 	private final Map<String, String> _mapper;
 	
-	public CodeGenerator() throws CannotCompileException {
+	/**
+	 * 初期化
+	 */
+	public CodeGenerator() {
 		_mapper = new HashMap<>();
 		
 		for (final CodeFragments elm : CodeFragments.values())
 			map(elm, elm.ID);
 	}
 	
+	/**
+	 * 列挙型の値の {@link Enum#name()} をキーとして置換文字列を追加
+	 * 
+	 * @param id 列挙型の値
+	 * @param replacement 置換文字列
+	 */
 	public final void map(final Enum<?> id, final String replacement) {
 		_mapper.put(id.name().toLowerCase(), replacement);
 	}
 	
+	/**
+	 * 対象の文字列をキーとして置換文字列を追加
+	 * 
+	 * @param id 対象の文字列
+	 * @param replacement 置換文字列
+	 */
 	public final void map(final String id, final String replacement) {
 		_mapper.put(id.toLowerCase(), replacement);
 	}
 	
+	/**
+	 * フィールドを与えて {@link ContextID} の置換文字列のマップを追加する
+	 * 
+	 * @param field フィールド
+	 * @throws CannotCompileException
+	 */
 	public final void attachField(final CtField field) throws CannotCompileException {
 		try {
 			if (field != null) {
-				map(CGIDs.VarField, CodeFragments.VarTarget.of(field.getName()));
+				map(ContextID.VarField, CodeFragments.VarTarget.of(field.getName()));
 				
 				final Pair<Class<?>, Boolean> toc = Util.toClass(field.getType());
-				map(CGIDs.TypeField, toc.FIRST.getCanonicalName());
+				map(ContextID.TypeField, toc.FIRST.getCanonicalName());
 				if (toc.FIRST.isArray()) {
-					map(CGIDs.TypeFieldComponent, toc.FIRST.getComponentType().getCanonicalName());
+					map(ContextID.TypeFieldComponent, toc.FIRST.getComponentType().getCanonicalName());
 				}
 				
 				if (field.getType().isArray()) {
@@ -187,7 +213,7 @@ public final class CodeGenerator {
 					
 					final ArraySizeByField i2 = (ArraySizeByField) field.getAnnotation(ArraySizeByField.class);
 					if (i2 != null)
-						size_expr = CodeFragments.VarTarget.of(field.getName());
+						size_expr = CodeFragments.VarTarget.of(i2.value());
 					
 					final ArraySizeByMethod i3 = (ArraySizeByMethod) field.getAnnotation(ArraySizeByMethod.class);
 					if (i3 != null)
@@ -195,7 +221,7 @@ public final class CodeGenerator {
 					
 					if (size_expr == null)
 						throw new CannotCompileException("No array size indicator found for " + field);
-					map(CGIDs.ExprFieldSizeGetter, size_expr);
+					map(ContextID.ExprFieldSizeGetter, size_expr);
 				}
 			}
 		} catch (CannotCompileException e) {
@@ -205,11 +231,20 @@ public final class CodeGenerator {
 		}
 	}
 	
+	/**
+	 * {@link #attachField(CtField)} によって追加された置換を消去する
+	 */
 	public final void detachField() {
-		for (final CGIDs elm : CGIDs.values())
+		for (final ContextID elm : ContextID.values())
 			_mapper.remove(elm.name());
 	}
 	
+	/**
+	 * 対象の文字列を置換した文字列を得る
+	 * 
+	 * @param src 対象の文字列
+	 * @return 置換した文字列
+	 */
 	public final String replaceAll(final String src) {
 		String result = src;
 		Matcher m = ID_REGEX.matcher(result);
@@ -227,18 +262,6 @@ public final class CodeGenerator {
 		}
 		result = result.replace('\0', '$');
 		return result;
-	}
-	public static void main(String[] args) throws Exception {
-		final CodeGenerator cg = new CodeGenerator();
-		cg.attachField(ClassPool.getDefault().getOrNull("petit.bin.test.Test1").getField("v5"));
-		final String s = "{" + "\n" +
-				"$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeField.class);" + "\n" + 
-				"$varField$ = ($typeField$) sa.read($varReader$);" +  "\n" +
-				"$$$1 = $typeSerAdap$}";
-		
-		System.out.println(cg.replaceAll(s));
-		for (final Entry<String, String> ent : cg._mapper.entrySet())
-			System.out.println(ent.getKey() + " = " + ent.getValue());
 	}
 	
 }

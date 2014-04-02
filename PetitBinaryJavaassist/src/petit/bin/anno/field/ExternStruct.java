@@ -69,12 +69,12 @@ public @interface ExternStruct {
 							}
 						 */
 						return cg.replaceAll(
-								"{" +
-								"	Class c = $varTarget$.$esa$();" +
-								"	if (c != null) {" +
-								"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer(c);" +
-								"		$varField$ = ($typeField$) sa.read($varReader$);" +
-								"	}" +
+								"{\n" +
+								"	Class c = $varTarget$.$esa$();\n" +
+								"	if (c != null) {\n" +
+								"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer(c);\n" +
+								"		$varField$ = ($typeField$) sa.read($varReader$);\n" +
+								"	}\n" +
 								"}");
 					} else {
 						/*
@@ -85,12 +85,12 @@ public @interface ExternStruct {
 						 *     }
 						 */
 						return cg.replaceAll(
-								"{" +
-								"	$varField$ = ($typeField$) $varTarget$.$esa$();" +
-								"	if ($varField$ != null) {" +
-								"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($varField$.getClass());" +
-								"		sa.read($varField$, $varReader$);" +
-								"	}" +
+								"{\n" +
+								"	$varField$ = ($typeField$) $varTarget$.$esa$();\n" +
+								"	if ($varField$ != null) {\n" +
+								"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($varField$.getClass());\n" +
+								"		sa.read($varField$, $varReader$);\n" +
+								"	}\n" +
 								"}");
 					}
 				} else {
@@ -102,9 +102,9 @@ public @interface ExternStruct {
 					 *     }
 					 */
 					return cg.replaceAll(
-							"{" +
-							"	$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeField$.class);" +
-							"	$varField$ = ($typeField$) sa.read($varReader$);" +
+							"{\n" +
+							"	$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeField$.class);\n" +
+							"	$varField$ = ($typeField$) sa.read($varReader$);\n" +
 							"}");
 				}
 			} catch (Exception e) {
@@ -121,10 +121,10 @@ public @interface ExternStruct {
 			 * }
 			 */
 			return cg.replaceAll(
-					"{" +
-					"	if ($varField$ != null) {" +
-					"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($varField$.getClass());" +
-					"		sa.write($varField$, $varWriter$);" +
+					"{\n" +
+					"	if ($varField$ != null) {\n" +
+					"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($varField$.getClass());\n" +
+					"		sa.write($varField$, $varWriter$);\n" +
 					"	}" +
 					"}");
 		}

@@ -56,16 +56,16 @@ public @interface ExternStructArray {
 						// esa.value() points to a (?)Ljava/lang/Class; method
 						return cg.replaceAll(
 								"{" +
-								"	int size = $exprFieldSizeGetter$;" +
-								"	if ($varField$ == null || $varField$.length != size)" +
-								"		$varField$ = new $typeFieldComponent$[size];" +
+								"	int size = $exprFieldSizeGetter$;\n" +
+								"	if ($varField$ == null || $varField$.length != size)\n" +
+								"		$varField$ = new $typeFieldComponent$[size];\n" +
 								
-								"	Class c = $varTarget$.$esaa$();" +
-								"	if (c != null) {" +
-								"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer(c);" +
-								"		for (int i = 0; i < size; i++)" +
-								"			$varField$[i] = ($typeFieldComponent$) sa.read($varReader$);" +
-								"	}" +
+								"	Class c = $varTarget$.$esaa$();\n" +
+								"	if (c != null) {\n" +
+								"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer(c);\n" +
+								"		for (int i = 0; i < size; i++)\n" +
+								"			$varField$[i] = ($typeFieldComponent$) sa.read($varReader$);\n" +
+								"	}\n" +
 								"}");
 					} else {
 						return cg.replaceAll(
@@ -114,23 +114,23 @@ public @interface ExternStructArray {
 				if (field.hasAnnotation(ExternStructArray.class)) { 
 					// field は内部で field's type とは異なる型のインスタンスを持っているかもしれない
 					return cg.replaceAll(
-							"if ($varField$ != null) {" +
-							"	$typeSerAdap$ sa;" +
-							"	for (int i = 0; i < $varField$.length; i++) {" +
-							"		if ($varField$[i] != null) {" +
-							"			sa = $typeSerAdapFactory$.getSerializer($varField$[i].getClass());" +
-							"			sa.write($varField$[i], $varWriter$);" +
-							"		}" +
-							"	}" +
+							"if ($varField$ != null) {\n" +
+							"	$typeSerAdap$ sa;\n" +
+							"	for (int i = 0; i < $varField$.length; i++) {\n" +
+							"		if ($varField$[i] != null) {\n" +
+							"			sa = $typeSerAdapFactory$.getSerializer($varField$[i].getClass());\n" +
+							"			sa.write($varField$[i], $varWriter$);\n" +
+							"		}\n" +
+							"	}\n" +
 							"}");
 				} else {
 					// field の内部は全て field's type と同一
 					return cg.replaceAll(
-							"if ($varField$ != null) {" +
-							"	$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeFieldComponent$.class);" +
-							"	for (int i = 0; i < $varField$.length; i++)" +
-							"		if ($varField$[i] != null)" +
-							"			sa.write($varField$[i], $varWriter$);" +
+							"if ($varField$ != null) {\n" +
+							"	$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeFieldComponent$.class);\n" +
+							"	for (int i = 0; i < $varField$.length; i++)\n" +
+							"		if ($varField$[i] != null)\n" +
+							"			sa.write($varField$[i], $varWriter$);\n" +
 							"}");
 				}
 			} catch (Exception e) {

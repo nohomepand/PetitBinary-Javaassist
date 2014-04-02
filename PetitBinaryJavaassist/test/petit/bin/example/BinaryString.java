@@ -17,6 +17,7 @@ import petit.bin.store.Store.SerializationByteOrder;
  * @since 2014/04/01 PetitBinaryJavaassist
  *
  */
+@Struct(byteOrder = SerializationByteOrder.NEUTRAL)
 public abstract class BinaryString {
 	
 	private static final Charset internal_cs = Charset.forName("utf-8");
@@ -28,6 +29,16 @@ public abstract class BinaryString {
 	 */
 	public abstract String get();
 	
+	@Override
+	public String toString() {
+		return get();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof BinaryString && ((BinaryString) obj).get().equals(get());
+	}
+	
 	/**
 	 * ヌル文字で終端する文字列を表す<br />
 	 * 内部クラスをシリアライズクラスとする場合は static メンバにしなければならない
@@ -36,7 +47,6 @@ public abstract class BinaryString {
 	 * @since 2014/04/01 PetitBinaryJavaassist
 	 *
 	 */
-	@Struct(byteOrder = SerializationByteOrder.NEUTRAL)
 	public static final class NullTerminatedString extends BinaryString {
 		
 		/**
@@ -66,6 +76,7 @@ public abstract class BinaryString {
 		/**
 		 * 文字列の終端のヌル文字
 		 */
+		@StructMember(1)
 		protected byte _null_char;
 		
 		/**

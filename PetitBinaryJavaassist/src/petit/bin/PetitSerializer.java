@@ -27,7 +27,7 @@ import petit.bin.util.Util;
  */
 public final class PetitSerializer {
 	
-	public static final String CONCRETE_SERIALIZER_CLASS_NAME = "$__SerializeAdapter__";
+	public static final String CONCRETE_SERIALIZER_CLASS_NAME = "$__PetitSerializerAdapter__";
 	
 	/**
 	 * シリアライズクラスに対する実際の {@link SerializeAdapter} のマップ
@@ -90,7 +90,7 @@ public final class PetitSerializer {
 			adapter_clazz.addConstructor(adapter_ctor);
 			
 			// add general method(s)
-			adapter_clazz.addMethod(CtMethod.make(
+			adapter_clazz.addMethod(makeMethod(
 					"public final Class getTargetClass() { return _clazz; }",
 					adapter_clazz));
 			
@@ -98,36 +98,37 @@ public final class PetitSerializer {
 			final List<CtField> managed_fields = Util.getManagedFields(DefaultClassPool.CP, clazz);
 			
 			// for reader
-			adapter_clazz.addMethod(CtMethod.make(cg.replaceAll(
-					"public final Object read(Object ao, $typeReader$ $varReader$) throws Exception {" +
-					"	$varReader$.pushByteOrder($varTargetStructAnnotation$.byteOrder());" +
-					"	$varReader$.pushType($varTargetClass$);" +
-					
-					"	" + makeReadMethodBody(clazz, adapter_clazz, managed_fields, cg) +
-					
-					"	$varReader$.popType();" +
-					"	$varReader$.popByteOrder();" +
-					"	return ao;" +
+			adapter_clazz.addMethod(makeMethod(cg.replaceAll(
+					"public final Object read(Object ao, $typeReader$ $varReader$) throws Exception {\n" +
+						"$varReader$.pushByteOrder($varTargetStructAnnotation$.byteOrder());\n" +
+						"$varReader$.pushType($varTargetClass$);\n" +
+						
+						makeReadFields(managed_fields, cg) +
+						
+						"$varReader$.popType();\n" +
+						"$varReader$.popByteOrder();\n" +
+						"return ao;\n" +
 					"}"), adapter_clazz));
 			
-			adapter_clazz.addMethod(CtMethod.make(cg.replaceAll(
-					"public final Object read($typeReader$ $varReader$) throws Exception {" +
-					"	return read($varTargetInstor$.newInstance(), $varReader$);" +
+			adapter_clazz.addMethod(makeMethod(cg.replaceAll(
+					"public final Object read($typeReader$ $varReader$) throws Exception {\n" +
+							"return read($varTargetInstor$.newInstance(), $varReader$);\n" +
 					"}"), adapter_clazz));
 			
 			// for writer
-			adapter_clazz.addMethod(CtMethod.make(cg.replaceAll(
-					"public final void write(Object ao, $typeWriter$ $varWriter$) throws Exception {" +
-					"	$varWriter$.pushByteOrder($varTargetStructAnnotation$.byteOrder());" +
-					"	$varWriter$.pushType($varTargetClass$);" +
-					
-					"	" + makeWriteMethodBody(clazz, adapter_clazz, managed_fields, cg) +
-					
-					"	$varWriter$.popType();" +
-					"	$varWriter$.popByteOrder();" +
+			adapter_clazz.addMethod(makeMethod(cg.replaceAll(
+					"public final void write(Object ao, $typeWriter$ $varWriter$) throws Exception {\n" +
+						"$varWriter$.pushByteOrder($varTargetStructAnnotation$.byteOrder());\n" +
+						"$varWriter$.pushType($varTargetClass$);\n" +
+						
+						makeWriteFields(managed_fields, cg) +
+						
+						"$varWriter$.popType();\n" +
+						"$varWriter$.popByteOrder();\n" +
 					"}"), adapter_clazz));
-
-			return (SerializeAdapter<?>) adapter_clazz.toClass().getConstructor(Class.class).newInstance(clazz);
+			return (SerializeAdapter<?>) adapter_clazz.toClass()
+					.getConstructor(Class.class)
+					.newInstance(clazz);
 		} catch (CannotCompileException e) {
 			throw e;
 		} catch (Exception e) {
@@ -136,7 +137,17 @@ public final class PetitSerializer {
 		
 	}
 	
-	private static final String makeReadMethodBody(final Class<?> target_clazz, final CtClass adapter_clazz, final List<CtField> managed_fields, final CodeGenerator cg) throws CannotCompileException {
+	private static final CtMethod makeMethod(final String code, final CtClass decl) throws CannotCompileException {
+		try {
+			return CtMethod.make(code, decl);
+		} catch (CannotCompileException e) {
+			System.err.println(code);
+			e.printStackTrace();
+			throw e;
+		}
+	}
+	
+	private static final String makeReadFields(final List<CtField> managed_fields, final CodeGenerator cg) throws CannotCompileException {
 		final StringBuilder sb = new StringBuilder();
 		
 		/*
@@ -153,11 +164,10 @@ public final class PetitSerializer {
 			sb.append(ma.makeReaderSource(field, cg)).append("\n");
 		}
 		cg.detachField();
-		System.err.println(sb.toString());
 		return sb.toString();
 	}
 	
-	private static final String makeWriteMethodBody(final Class<?> target_clazz, final CtClass adapter_clazz, final List<CtField> managed_fields, final CodeGenerator cg) throws CannotCompileException {
+	private static final String makeWriteFields(final List<CtField> managed_fields, final CodeGenerator cg) throws CannotCompileException {
 		final StringBuilder sb = new StringBuilder();
 		
 		/*
@@ -165,7 +175,6 @@ public final class PetitSerializer {
 		 * <write elements>
 		 */
 		sb.append(cg.replaceAll("$typeTargetClass$ $varTarget$ = ($typeTargetClass$) ao;")).append("\n");
-//		sb.append("System.out.println(ao.getClass());\n");
 		for (final CtField field : managed_fields) {
 			final MemberAnnotationMetaAgent ma = MetaAgentFactory.getMetaAgent(field);
 			if (ma == null)
@@ -175,7 +184,6 @@ public final class PetitSerializer {
 			sb.append(ma.makeWriterSource(field, cg)).append("\n");
 		}
 		cg.detachField();
-		System.err.println(sb.toString());
 		return sb.toString();
 	}
 	
