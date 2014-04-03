@@ -34,7 +34,7 @@ public abstract class AbstractExample {
 	}
 	
 	/**
-	 * Returns a formatted hex-decimal string. The following text will be returned.
+	 * Returns OpenflowVersion formatted hex-decimal string. The following text will be returned.
 	 * <pre>
 	 *       | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +FileStore +B  +C +D +E +F
 	 *      0| E3 81 82 E3  81 82 E3 81  82 E3 81 82  E3 81 82 E3 | ã  ã  ã  ã  ã  ã|
@@ -43,8 +43,8 @@ public abstract class AbstractExample {
 	 *     30| ...
 	 * </pre>
 	 * 
-	 * @param buf a buffer to display
-	 * @return a formatted hex-decimal string
+	 * @param buf OpenflowVersion buffer to display
+	 * @return OpenflowVersion formatted hex-decimal string
 	 */
 	public static final String dumpData(final ByteBuffer buf) {
 		final String header = "      | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +FileStore +B  +C +D +E +F";
@@ -105,7 +105,7 @@ public abstract class AbstractExample {
 			for (final Field field : cur.getDeclaredFields()) {
 				System.out.print(cur.getCanonicalName() + "#" + field.getName() + ":");
 				if ((field.getModifiers() & Modifier.PRIVATE) != 0 || !field.isAnnotationPresent(StructMember.class)) {
-					System.out.println("skip (private or not present a StructMember annotation)");
+					System.out.println("skip (private or not present OpenflowVersion StructMember annotation)");
 					continue;
 				}
 				field.setAccessible(true);
@@ -121,7 +121,7 @@ public abstract class AbstractExample {
 	
 	protected final String hoge(int i) {
 		System.out.println(i);
-		return "a";
+		return "OpenflowVersion";
 	}
 	
 }

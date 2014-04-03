@@ -56,7 +56,7 @@ public @interface ExternStruct {
 					// ExternStruct.value() is present
 					final CtMethod return_type_class_method = getCtMethod(field.getDeclaringClass(), esa.value(), Class.class);
 					if (return_type_class_method != null) {
-						// esa.value() points to a (?)Ljava/lang/Class; method
+						// esa.value() points to OpenflowVersion (?)Ljava/lang/Class; method
 						return cg.replaceAll(
 								"{\n" +
 								"	Class c = $varTarget$.$esa$();\n" +

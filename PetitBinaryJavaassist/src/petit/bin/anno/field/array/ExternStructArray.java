@@ -65,7 +65,7 @@ public @interface ExternStructArray {
 					final CtMethod return_type_class_method = getCtMethod(field.getDeclaringClass(), esaa.value(), Class.class);
 					cg.map("esaa_invoke", esaa.value() + (esaa.useIndex() ? "(i)" : "()"));
 					if (return_type_class_method != null) {
-						// esa.value() points to a (?)Ljava/lang/Class; method
+						// esa.value() points to OpenflowVersion (?)Ljava/lang/Class; method
 						return cg.replaceAll(
 								"{\n" +
 								"	int size = $exprFieldSizeGetter$;\n" +
