@@ -10,6 +10,9 @@ import javassist.CtField;
 import javassist.CtMethod;
 import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
+import petit.bin.anno.array.ArraySizeByField;
+import petit.bin.anno.array.ArraySizeByMethod;
+import petit.bin.anno.array.ArraySizeConstant;
 
 /**
  * コンポーネント型が byte, short, char, int, long, float, double型以外の配列型を表す<br />
@@ -55,6 +58,19 @@ public @interface ExternStructArray {
 	public abstract boolean useIndex() default false;
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
+		
+		@Override
+		public void checkField(CtField field) throws CannotCompileException {
+			if (	field.hasAnnotation(ArraySizeConstant.class) ||
+					field.hasAnnotation(ArraySizeByField.class) ||
+					field.hasAnnotation(ArraySizeByMethod.class)) {
+				// FIXME enum の配列とか作ったらここも変える
+//				if (Enum.class.isAssignableFrom(Util.toClass(field.getDeclaringClass()).FIRST))
+//					throw new CannotCompileException("Enum type is not supported");
+				return;
+			} else
+				throw new CannotCompileException("No array size annotation is defined");
+		}
 		
 		@Override
 		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {

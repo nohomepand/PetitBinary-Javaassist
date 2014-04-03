@@ -243,4 +243,19 @@ public class Util {
 			return "L" + type.getCanonicalName().replace('.', '/') + ";";
 	}
 	
+	/**
+	 * 対象のオブジェクトが集合のいずれかに含まれるか検証する
+	 * 
+	 * @param target 対象のオブジェクト
+	 * @param others 集合
+	 * @return 対象のオブジェクトが集合のいずれかに含まれる場合は true
+	 */
+	@SafeVarargs
+	public static final <T> boolean isOneOf(final T target, final T ... others) {
+		for (int i = 0; i < others.length; i++)
+			if (target.equals(others[i]))
+				return true;
+		return false;
+	}
+	
 }

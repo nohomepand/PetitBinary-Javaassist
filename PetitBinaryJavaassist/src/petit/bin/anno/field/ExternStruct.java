@@ -10,6 +10,7 @@ import javassist.CtField;
 import javassist.CtMethod;
 import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
+import petit.bin.util.Util;
 
 /**
  * boolean, byte, short, char, int, long, float, double型以外の型を表す<br />
@@ -46,6 +47,19 @@ public @interface ExternStruct {
 	public abstract String value();
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
+		
+		@Override
+		public void checkField(CtField field) throws CannotCompileException {
+			try {
+				if (Enum.class.isAssignableFrom(Util.toClass(field.getDeclaringClass()).FIRST)) {
+					System.err.println(field + " is a Enum, " + EnumItem.class.getCanonicalName() + " annotation is more better way to use.");
+				}
+				
+				return; //その他はOK
+			} catch (Exception e) {
+				throw new CannotCompileException(e);
+			}
+		}
 		
 		@Override
 		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {

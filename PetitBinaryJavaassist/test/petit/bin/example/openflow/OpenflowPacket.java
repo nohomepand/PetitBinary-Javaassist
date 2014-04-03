@@ -2,7 +2,11 @@ package petit.bin.example.openflow;
 
 import petit.bin.anno.Struct;
 import petit.bin.anno.StructMember;
+import petit.bin.anno.field.EnumItem;
 import petit.bin.anno.field.ExternStruct;
+import petit.bin.anno.field.UInt16;
+import petit.bin.example.openflow.OpenflowCommon.OpenflowMessageType;
+import petit.bin.example.openflow.OpenflowCommon.OpenflowVersion;
 import petit.bin.store.Store.SerializationByteOrder;
 
 /**
@@ -25,15 +29,18 @@ public final class OpenflowPacket {
 		
 		/** An OpenFlow version number, e.g. OFP10_VERSION. */
 		@StructMember(0)
-		protected byte _version;
+		@EnumItem(storeType = byte.class, enumResolver = "fromNumber")
+		protected OpenflowVersion _version;
 		
 		/** One of the OFPT_ constants. */
 		@StructMember(1)
-		protected byte _type;
+		@EnumItem(storeType = byte.class, enumResolver = "fromNumber")
+		protected OpenflowMessageType _type;
 		
 		/** Length including this OpenflowPacketHeader. */
 		@StructMember(2)
-		protected short _length;
+		@UInt16
+		protected int _length;
 		
 		/**
 		 *  Transaction id associated with this packet.

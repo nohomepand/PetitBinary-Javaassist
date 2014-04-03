@@ -159,7 +159,7 @@ public final class PetitSerializer {
 			final MemberAnnotationMetaAgent ma = MetaAgentFactory.getMetaAgent(field);
 			if (ma == null)
 				throw new UnsupportedOperationException("Cannot find meta-agent for " + field + " (MAY BE BUG)");
-			ma.checkSupportTypes(field);
+			ma.checkField(field);
 			cg.attachField(field);
 			sb.append(ma.makeReaderSource(field, cg)).append("\n");
 		}
@@ -179,7 +179,7 @@ public final class PetitSerializer {
 			final MemberAnnotationMetaAgent ma = MetaAgentFactory.getMetaAgent(field);
 			if (ma == null)
 				throw new UnsupportedOperationException("Cannot find meta-agent for " + field + " (MAY BE BUG)");
-			ma.checkSupportTypes(field);
+			ma.checkField(field);
 			cg.attachField(field);
 			sb.append(ma.makeWriterSource(field, cg)).append("\n");
 		}

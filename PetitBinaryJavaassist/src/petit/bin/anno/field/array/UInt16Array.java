@@ -11,6 +11,9 @@ import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 import petit.bin.anno.MemberDefaultType;
 import petit.bin.anno.SupportType;
+import petit.bin.anno.array.ArraySizeByField;
+import petit.bin.anno.array.ArraySizeByMethod;
+import petit.bin.anno.array.ArraySizeConstant;
 
 /**
  * コンポーネント型が char型の配列型を表す
@@ -33,6 +36,16 @@ import petit.bin.anno.SupportType;
 public @interface UInt16Array {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
+		
+		@Override
+		public void checkField(CtField field) throws CannotCompileException {
+			if (	field.hasAnnotation(ArraySizeConstant.class) ||
+					field.hasAnnotation(ArraySizeByField.class) ||
+					field.hasAnnotation(ArraySizeByMethod.class)) {
+				super.checkField(field);
+			} else
+				throw new CannotCompileException("No array size annotation is defined");
+		}
 		
 		@Override
 		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {

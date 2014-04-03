@@ -4,6 +4,9 @@ import javassist.CannotCompileException;
 import javassist.CtField;
 import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
+import petit.bin.anno.array.ArraySizeByField;
+import petit.bin.anno.array.ArraySizeByMethod;
+import petit.bin.anno.array.ArraySizeConstant;
 
 /**
  * プリミティブ型の配列を読み書きするコードを生成する {@link MemberAnnotationMetaAgent}
@@ -20,6 +23,16 @@ public abstract class PrimitiveArrayTypeMetaAgent extends MemberAnnotationMetaAg
 	
 	public PrimitiveArrayTypeMetaAgent(final String store_method_suffix) {
 		STORE_METHOD_SUFFIX = store_method_suffix;
+	}
+	
+	@Override
+	public void checkField(CtField field) throws CannotCompileException {
+		if (	field.hasAnnotation(ArraySizeConstant.class) ||
+				field.hasAnnotation(ArraySizeByField.class) ||
+				field.hasAnnotation(ArraySizeByMethod.class)) {
+			super.checkField(field);
+		} else
+			throw new CannotCompileException("No array size annotation is defined");
 	}
 	
 	@Override

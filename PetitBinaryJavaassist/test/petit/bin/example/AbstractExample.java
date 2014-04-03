@@ -47,7 +47,7 @@ public abstract class AbstractExample {
 	 * @return OpenflowVersion formatted hex-decimal string
 	 */
 	public static final String dumpData(final ByteBuffer buf) {
-		final String header = "      | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +FileStore +B  +C +D +E +F";
+		final String header = "      | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +A +B  +C +D +E +F";
 		final char[] line_hex = new char[3 * 0x10/* hex string */ + 1 * 4 /* and paddings ' ' */];
 		final char[] line_chr = new char[1 * 0x10/* character  */];
 		final StringWriter sw = new StringWriter();
@@ -105,7 +105,7 @@ public abstract class AbstractExample {
 			for (final Field field : cur.getDeclaredFields()) {
 				System.out.print(cur.getCanonicalName() + "#" + field.getName() + ":");
 				if ((field.getModifiers() & Modifier.PRIVATE) != 0 || !field.isAnnotationPresent(StructMember.class)) {
-					System.out.println("skip (private or not present OpenflowVersion StructMember annotation)");
+					System.out.println("skip (private or not present StructMember annotation)");
 					continue;
 				}
 				field.setAccessible(true);

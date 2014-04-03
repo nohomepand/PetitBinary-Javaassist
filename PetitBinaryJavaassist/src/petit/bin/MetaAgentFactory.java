@@ -15,6 +15,7 @@ import javassist.CtMethod;
 import javassist.NotFoundException;
 import petit.bin.anno.MemberDefaultType;
 import petit.bin.anno.SupportType;
+import petit.bin.anno.field.EnumItem;
 import petit.bin.anno.field.ExternStruct;
 import petit.bin.anno.field.Float32;
 import petit.bin.anno.field.Float64;
@@ -72,6 +73,7 @@ public final class MetaAgentFactory {
 		addMetaAgent(UInt16Array.class);
 		addMetaAgent(Float32Array.class);
 		addMetaAgent(Float64Array.class);
+		addMetaAgent(EnumItem.class);
 //		addMetaAgent(UInt16Array.class);
 		try {
 			{
@@ -117,6 +119,12 @@ public final class MetaAgentFactory {
 		throw new UnsupportedOperationException("Cannot find OpenflowVersion sub-class of " + MemberAnnotationMetaAgent.class.getCanonicalName() + " in " + member_anno);
 	}
 	
+	/**
+	 * 対象のフィールドに対する {@link MemberAnnotationMetaAgent} の具象クラスのインスタンスを得る
+	 * 
+	 * @param field 対象のフィールド
+	 * @return 対象のフィールドに対する {@link MemberAnnotationMetaAgent} の具象クラスのインスタンス
+	 */
 	public static final MemberAnnotationMetaAgent getMetaAgent(final CtField field) {
 		for (final Entry<Class<? extends Annotation>, MemberAnnotationMetaAgent> ent : _member_anno_map.entrySet()) {
 			try {
@@ -171,7 +179,10 @@ public final class MetaAgentFactory {
 		 * @param support_types 対応する型
 		 */
 		final void setSupportTypes(final Class<?>[] support_types) {
-			_support_types.addAll(Arrays.asList(support_types));
+			if (support_types == null)
+				_support_types.clear();
+			else
+				_support_types.addAll(Arrays.asList(support_types));
 		}
 		
 		/**
@@ -184,11 +195,12 @@ public final class MetaAgentFactory {
 		}
 		
 		/**
-		 * 対象のフィールドが正しい型か検証する
+		 * 対象のフィールドが正しい型か検証する<br />
+		 * デフォルトの実装では，対象のフィールドの型が {@link #getSupportTypes()} のいずれかの型である場合に通過できる
 		 * 
 		 * @param vVarField 対象のフィールド
 		 */
-		public final void checkSupportTypes(final CtField field) throws CannotCompileException {
+		public void checkField(final CtField field) throws CannotCompileException {
 			if (_support_types == null || _support_types.isEmpty())
 				return; // any type is ok
 			
