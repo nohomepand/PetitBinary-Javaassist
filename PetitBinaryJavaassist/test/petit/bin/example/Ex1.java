@@ -29,7 +29,7 @@ public class Ex1 extends AbstractExample {
 		 * outputs:
 			petit.bin.example.Ex1#int1:ok
 			petit.bin.example.AbstractExample#HEX_TABLE:skip (private or not present a StructMember annotation)
-			      | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +A +B  +C +D +E +F
+			      | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +FileStore +B  +C +D +E +F
 			     0| 0A 00 00 00                                        |                 |
 		 */
 	}

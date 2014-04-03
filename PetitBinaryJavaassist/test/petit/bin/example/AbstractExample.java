@@ -36,7 +36,7 @@ public abstract class AbstractExample {
 	/**
 	 * Returns a formatted hex-decimal string. The following text will be returned.
 	 * <pre>
-	 *       | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +A +B  +C +D +E +F
+	 *       | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +FileStore +B  +C +D +E +F
 	 *      0| E3 81 82 E3  81 82 E3 81  82 E3 81 82  E3 81 82 E3 | ã  ã  ã  ã  ã  ã|
 	 *     10| 81 82 E3 81  82 E3 81 82  E3 81 82 E3  81 82 E3 81 |   ã  ã  ã  ã  ã |
 	 *     20| 82 E3 81 82  E3 81 82 E3  81 82 E3 81  82 E3 81 82 |  ã  ã  ã  ã  ã  |
@@ -47,7 +47,7 @@ public abstract class AbstractExample {
 	 * @return a formatted hex-decimal string
 	 */
 	public static final String dumpData(final ByteBuffer buf) {
-		final String header = "      | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +A +B  +C +D +E +F";
+		final String header = "      | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +FileStore +B  +C +D +E +F";
 		final char[] line_hex = new char[3 * 0x10/* hex string */ + 1 * 4 /* and paddings ' ' */];
 		final char[] line_chr = new char[1 * 0x10/* character  */];
 		final StringWriter sw = new StringWriter();

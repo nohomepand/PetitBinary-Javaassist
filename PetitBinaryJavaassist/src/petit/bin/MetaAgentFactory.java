@@ -33,6 +33,7 @@ import petit.bin.anno.field.array.Int16Array;
 import petit.bin.anno.field.array.Int32Array;
 import petit.bin.anno.field.array.Int64Array;
 import petit.bin.anno.field.array.Int8Array;
+import petit.bin.anno.field.array.UInt16Array;
 import petit.bin.util.Pair;
 import petit.bin.util.Util;
 
@@ -68,9 +69,10 @@ public final class MetaAgentFactory {
 		addMetaAgent(Int16Array.class);
 		addMetaAgent(Int32Array.class);
 		addMetaAgent(Int64Array.class);
+		addMetaAgent(UInt16Array.class);
 		addMetaAgent(Float32Array.class);
 		addMetaAgent(Float64Array.class);
-//		addMetaAgent(CharArray.class);
+//		addMetaAgent(UInt16Array.class);
 		try {
 			{
 				final Class<?> mac = findMetaAgentClass(ExternStruct.class);

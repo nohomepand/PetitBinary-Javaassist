@@ -11,89 +11,102 @@ import javassist.CtMethod;
 import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 
+/**
+ * コンポーネント型が byte, short, char, int, long, float, double型以外の配列型を表す<br />
+ * <br />
+ * {@link #value()} および {@link #useIndex()} はフィールドの読み込み時に，コンポーネント型，もしくはコンポーネント型のインスタンスを解決するメソッド名を指定することができる<br />
+ * メソッド名を指定した場合，対応するメソッドのシグネチャは次の 4種類の内いずれかである
+ * <pre>
+ * {@link #value()} の指定         | {@link #useIndex()} の指定         | メソッドのシグネチャ  | メソッドの説明
+ * あり                    | false                      | ()Ljava/lang/Class;   | 戻り値: 配列のコンポーネント型の具象型を表す
+ * あり                    | false                      | ()Ljava/lang/Object;  | 戻り値: 配列の要素の具象型を表す
+ * あり                    | true                       | (I)Ljava/lang/Class;  | 戻り値: 配列のコンポーネント型の具象型を表す 引数: 現在の読み込まれている配列要素のインデックス
+ * あり                    | true                       | (I)Ljava/lang/Object; | 戻り値: 配列の要素の具象型を表す 引数: 現在の読み込まれている配列要素のインデックス
+ * </pre>
+ * 
+ * <pre>
+ * 対応するフィールドの型:
+ *     コンポーネント型が byte, short, char, int, long, float, double型以外の配列型
+ * 次のフィールドの型の場合に自動的にこのアノテーションが指示される:
+ *     コンポーネント型が byte, short, char, int, long, float, double型以外の配列型
+ * </pre>
+ * 
+ * @author 俺用
+ * @since 2014/04/03 PetitBinaryJavaassist
+ *
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface ExternStructArray {
 	
 	/**
-	 * Specifies a component type resolver method which is used to resolve a concrete type of this vVarField's component type.
+	 * コンポーネント型，もしくはコンポーネント型のインスタンスを解決するメソッド名を指定する
 	 * 
-	 * @return name of the component type resolver method
+	 * @return コンポーネント型，もしくはコンポーネント型のインスタンスを解決するメソッド名
+	 * @see ExternStructArray
 	 */
 	public abstract String value();
+	
+	/**
+	 * {@link #value()} で指定されるメソッドが，引数として配列要素のインデックスを受け付けるかどうかを指定する
+	 * 
+	 * @return メソッドが引数として配列要素のインデックスを受け付ける場合は true(デフォルト値: false)
+	 */
+	public abstract boolean useIndex() default false;
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
 		
 		@Override
 		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
-			/*
-			 * {
-			 *     int size = <ind>;
-			 *     if (<vVarField> == null || <vVarField>.length != size)
-			 *         <vVarField> = new <vVarField's type>[size];
-			 *     
-			 *     <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<vVarField's class>);
-			 *     for (int i = 0; i < <vVarField>.length; i++)
-			 *         if ExternStruct.value() is not present:
-			 *             {
-			 *                 <vVarField>[i] = sa.read(<reader>);
-			 *             }
-			 *         else
-			 *             {
-			 *                 <vVarField>[i] = <method which is indicated by ExternStruct.value()>();
-			 *                 sa.read(<vVarField>[i], <reader>);
-			 *             }
-			 *         
-			 * }
-			 */
 			try {
 				final ExternStructArray esaa = (ExternStructArray) field.getAnnotation(ExternStructArray.class);
 				if (esaa != null && esaa.value() != null && !esaa.value().isEmpty()) {
 					// ExternStructArray.value() is present
 					final CtMethod return_type_class_method = getCtMethod(field.getDeclaringClass(), esaa.value(), Class.class);
-					cg.map("esaa", esaa.value());
+					cg.map("esaa_invoke", esaa.value() + (esaa.useIndex() ? "(i)" : "()"));
 					if (return_type_class_method != null) {
 						// esa.value() points to a (?)Ljava/lang/Class; method
 						return cg.replaceAll(
-								"{" +
+								"{\n" +
 								"	int size = $exprFieldSizeGetter$;\n" +
 								"	if ($varField$ == null || $varField$.length != size)\n" +
 								"		$varField$ = new $typeFieldComponent$[size];\n" +
 								
-								"	Class c = $varTarget$.$esaa$();\n" +
 								"	if (c != null) {\n" +
-								"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer(c);\n" +
-								"		for (int i = 0; i < size; i++)\n" +
+								"		for (int i = 0; i < size; i++) {\n" +
+								"			Class c = $varTarget$.$esaa_invoke$;\n" +
+								"			$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer(c);\n" +
 								"			$varField$[i] = ($typeFieldComponent$) sa.read($varReader$);\n" +
+								"		}\n" +
 								"	}\n" +
 								"}");
 					} else {
 						return cg.replaceAll(
-								"{" +
-								"	int size = $exprFieldSizeGetter$;" +
-								"	if ($varField$ == null || $varField$.length != size)" +
-								"		$varField$ = new $typeFieldComponent$[size];" +
+								"{\n" +
+								"	int size = $exprFieldSizeGetter$;\n" +
+								"	if ($varField$ == null || $varField$.length != size)\n" +
+								"		$varField$ = new $typeFieldComponent$[size];\n" +
 								
-								"	for (int i = 0; i < size; i++) {" +
-								"		$varField$[i] = ($typeFieldComponent$) $varTarget$.$esaa$();" +
-								"		if ($varField$[i] != null) {" +
-								"			$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($varField$[i].getClass());" +
-								"			sa.read($varField$, $varReader$);" +
-								"		}" +
-								"	}" +
+								"	for (int i = 0; i < size; i++) {\n" +
+								"		$varField$[i] = ($typeFieldComponent$) $varTarget$.$esaa_invoke$;\n" +
+								"		if ($varField$[i] != null) {\n" +
+								"			$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($varField$[i].getClass());\n" +
+								"			sa.read($varField$, $varReader$);\n" +
+								"		}\n" +
+								"	}\n" +
 								"}");
 					}
 				} else {
 					// ExternStructArray.value() is NOT present
 					return cg.replaceAll(
-							"{" +
-							"	int size = $exprFieldSizeGetter$;" +
-							"	if ($varField$ == null || $varField$.length != size)" +
-							"		$varField$ = new $typeFieldComponent$[size];" +
+							"{\n" +
+							"	int size = $exprFieldSizeGetter$;\n" +
+							"	if ($varField$ == null || $varField$.length != size)\n" +
+							"		$varField$ = new $typeFieldComponent$[size];\n" +
 							
-							"	$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeFieldComponent$.class);" +
-							"	for (int i = 0; i < size; i++)" +
-							"		$varField$[i] = sa.read($varReader$);" +
+							"	$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($typeFieldComponent$.class);\n" +
+							"	for (int i = 0; i < size; i++)\n" +
+							"		$varField$[i] = sa.read($varReader$);\n" +
 							"}");
 				}
 			} catch (Exception e) {
@@ -103,13 +116,6 @@ public @interface ExternStructArray {
 		
 		@Override
 		public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
-			/*
-			 * if (<vVarField> != null) {
-			 *     <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<vVarField's class>);
-			 *     for (int i = 0; i < <vVarField's length>; i++)
-			 *        sa.write(<vVarField[i]>, <dst>);
-			 * }
-			 */
 			try {
 				if (field.hasAnnotation(ExternStructArray.class)) { 
 					// field は内部で field's type とは異なる型のインスタンスを持っているかもしれない

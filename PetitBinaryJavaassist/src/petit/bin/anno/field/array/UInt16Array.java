@@ -1,4 +1,4 @@
-package petit.bin.anno.field;
+package petit.bin.anno.field.array;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,15 +13,13 @@ import petit.bin.anno.MemberDefaultType;
 import petit.bin.anno.SupportType;
 
 /**
- * 8ビット整数値で表現される真偽型を表す<br />
- * このフィールドの読み込みでは，まず 8ビット整数値を読み込まれ，その値が 0の場合に falseが， 0以外の場合に trueがフィールドに与えられる<br />
- * このフィールドの書き込みでは， trueの場合に 1，false の場合に 0が書き込まれる
+ * コンポーネント型が char型の配列型を表す
  * 
  * <pre>
  * 対応するフィールドの型:
- *     boolean
+ *     char[]
  * 次のフィールドの型の場合に自動的にこのアノテーションが指示される:
- *     boolean
+ *     char[]
  * </pre>
  * 
  * @author 俺用
@@ -30,19 +28,31 @@ import petit.bin.anno.SupportType;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-@MemberDefaultType(boolean.class)
-@SupportType({boolean.class})
-public @interface Int8Boolean {
+@MemberDefaultType(char[].class)
+@SupportType(char[].class)
+public @interface UInt16Array {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
+		
 		@Override
 		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
-			return cg.replaceAll("$varField$ = $varReader$.readInt8() != 0;");
+			return cg.replaceAll(
+					"{\n" +
+					"	int size = $exprFieldSizeGetter$;\n" +
+					"	if ($varField$ == null || $varField$.length != size)\n" +
+					"		$varField$ = new $typeFieldComponent$[size];\n" +
+					"	for (int i = 0; i < $varField$.length; i++)\n" +
+					"		$varField$[i] = (char) ($varReader$.readInt16() & 0xffff);\n" +
+					"}");
 		}
 		
 		@Override
 		public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
-			return cg.replaceAll("$varWriter$.writeInt8((byte) ($varField$ ? 1 : 0));");
+			return cg.replaceAll(
+					"if ($varField$ != null) {\n" +
+					"	for (int i = 0; i < $varField$.length; i++)\n" +
+					"		$varWriter$.writeInt16((short) $varField$[i]);\n" +
+					"}");
 		}
 		
 	}

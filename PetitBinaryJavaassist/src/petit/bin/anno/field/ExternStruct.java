@@ -4,7 +4,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.Field;
 
 import javassist.CannotCompileException;
 import javassist.CtField;
@@ -12,19 +11,37 @@ import javassist.CtMethod;
 import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 
+/**
+ * boolean, byte, short, char, int, long, float, double型以外の型を表す<br />
+ * <br />
+ * {@link #value()} はフィールドの読み込み時に，フィールドの具象クラスまたはインスタンスを解決するメソッド名を指定することができる<br />
+ * メソッド名を指定した場合，対応するメソッドのシグネチャは次の 2種類の内いずれかである
+ * <pre>
+ * {@link #value()} の指定         | メソッドのシグネチャ  | メソッドの説明
+ * あり                    | ()Ljava/lang/Class;   | 戻り値: 配列のコンポーネント型を表す
+ * あり                    | ()Ljava/lang/Object;  | 戻り値: 配列の要素の具象型を表す
+ * </pre>
+ * 
+ * <pre>
+ * 対応するフィールドの型:
+ *     boolean, byte, short, char, int, long, float, double型以外の型
+ * 次のフィールドの型の場合に自動的にこのアノテーションが指示される:
+ *     boolean, byte, short, char, int, long, float, double型以外の型
+ * </pre>
+ * 
+ * @author 俺用
+ * @since 2014/04/03 PetitBinaryJavaassist
+ *
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface ExternStruct {
 	
 	/**
-	 * Specify a method which is used for resolving concrete class instance of the vVarField.<br />
-	 * If the value is null the concrete class is treated as the vVarField's type.<br />
-	 * The method must be defined as the following signature.
-	 * <pre>
-	 * [Object which extends this vVarField's type] [method name]({@link Object}, {@link Field})
-	 * </pre>
-	 * 
-	 * @return name of concrete class resolver method
+	 * フィールドの読み込み時に，フィールドの具象クラスまたはインスタンスを解決するメソッド名を指定する
+	 *  
+	 * @return フィールドの読み込み時に，フィールドの具象クラスまたはインスタンスを解決するメソッド名
+	 * @see ExternStruct
 	 */
 	public abstract String value();
 	
@@ -32,27 +49,6 @@ public @interface ExternStruct {
 		
 		@Override
 		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
-			/*
-			 * if ExternStruct.value() is not present:
-			 *     {
-			 *         <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<vVarField's class>);
-			 *         <vVarField> = sa.read(<reader>);
-			 *     }
-			 * else
-			 *     if the method which is indicated by ExternStrcut.value() does NOT return Class
-			 *     {
-			 *         <vVarField> = <method which is indicated by ExternStruct.value()>();
-			 *         <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<vVarField.getClass()>);
-			 *         sa.read(<vVarField>, <reader>);
-			 *     }
-			 *     else
-			 *     {
-			 *         Class ac = <method which is indicated by ExternStruct.value()>();
-			 *         <SerializeAdapter> sa = <PetitSerializer>.getSerializer(ac);
-			 *         <vVarField> = sa.read(<reader>);
-			 *     }
-			 */
-			
 			try {
 				final ExternStruct esa = (ExternStruct) field.getAnnotation(ExternStruct.class);
 				if (esa != null && esa.value() != null && !esa.value().isEmpty()) {
@@ -61,13 +57,6 @@ public @interface ExternStruct {
 					final CtMethod return_type_class_method = getCtMethod(field.getDeclaringClass(), esa.value(), Class.class);
 					if (return_type_class_method != null) {
 						// esa.value() points to a (?)Ljava/lang/Class; method
-						/*
-							{
-								Class ac = <method which is indicated by ExternStruct.value()>();
-								<SerializeAdapter> sa = <PetitSerializer>.getSerializer(ac);
-								<vVarField> = sa.read(<reader>);
-							}
-						 */
 						return cg.replaceAll(
 								"{\n" +
 								"	Class c = $varTarget$.$esa$();\n" +
@@ -77,13 +66,6 @@ public @interface ExternStruct {
 								"	}\n" +
 								"}");
 					} else {
-						/*
-						 *     {
-						 *         <vVarField> = <method which is indicated by ExternStruct.value()>();
-						 *         <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<vVarField.getClass()>);
-						 *         sa.read(<vVarField>, <reader>);
-						 *     }
-						 */
 						return cg.replaceAll(
 								"{\n" +
 								"	$varField$ = ($typeField$) $varTarget$.$esa$();\n" +
@@ -121,11 +103,9 @@ public @interface ExternStruct {
 			 * }
 			 */
 			return cg.replaceAll(
-					"{\n" +
-					"	if ($varField$ != null) {\n" +
-					"		$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($varField$.getClass());\n" +
-					"		sa.write($varField$, $varWriter$);\n" +
-					"	}" +
+					"if ($varField$ != null) {\n" +
+					"	$typeSerAdap$ sa = $typeSerAdapFactory$.getSerializer($varField$.getClass());\n" +
+					"	sa.write($varField$, $varWriter$);\n" +
 					"}");
 		}
 		

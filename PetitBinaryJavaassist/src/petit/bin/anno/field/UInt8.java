@@ -8,7 +8,14 @@ import java.lang.annotation.Target;
 import petit.bin.anno.SupportType;
 
 /**
- * 符号なし 8ビット整数値を表す
+ * 8ビット符号なし整数型を表す
+ * 
+ * <pre>
+ * 対応するフィールドの型:
+ *     short, char, int, long
+ * 次のフィールドの型の場合に自動的にこのアノテーションが指示される:
+ *     なし
+ * </pre>
  * 
  * @author 俺用
  * @since 2014/03/14 PetitBinarySerialization
@@ -18,6 +25,7 @@ import petit.bin.anno.SupportType;
 @Target(ElementType.FIELD)
 @SupportType({
 	short.class,
+	char.class,
 	int.class,
 	long.class,})
 public @interface UInt8 {

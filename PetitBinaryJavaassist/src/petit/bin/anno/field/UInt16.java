@@ -13,6 +13,20 @@ import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 import petit.bin.anno.MemberDefaultType;
 import petit.bin.anno.SupportType;
 
+/**
+ * 16ビット符号なし整数型を表す
+ * 
+ * <pre>
+ * 対応するフィールドの型:
+ *     char, int, long
+ * 次のフィールドの型の場合に自動的にこのアノテーションが指示される:
+ *     char
+ * </pre>
+ * 
+ * @author 俺用
+ * @since 2014/04/03 PetitBinaryJavaassist
+ *
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @MemberDefaultType(char.class)
