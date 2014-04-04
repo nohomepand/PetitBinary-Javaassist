@@ -13,6 +13,19 @@ import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 
 /**
+ * 広義の型安全な列挙型を表す<br />
+ * ある列挙型 Eがあるとして，あるフィールド F の型が E の場合，F の書き込みは Eから整数値へ変換され，
+ * 読み込みは整数値から Eへ変換される．<br />
+ * <br />
+ * 読み込み時は， {@link #storeType()} で示される型に基づいて整数が読み取られ，
+ * {@link #fromStored()} で示される，シグネチャとして (I)Ljava/lang/Object; を持つメソッドへ渡され，
+ * フィールドの値としてその戻り値が割り当てられる<br />
+ * <br />
+ * 書き込み字は， {@link #toStore()} で示される，シグネチャとして (Ljava/lang/Object;)I を持つメソッドへ渡され，
+ * その戻り値が書き込まれる<br />
+ * {@link #toStore()} はデフォルト値として， {@link Enum#ordinal()} を呼び出すための "ordinal" が指定されている
+ * <br />
+ * 以下に C風の enumと，Java風の enumおよびフィールド上の表現の例を示す
  * <pre>
  * C:
  * enum FOO {
@@ -77,10 +90,40 @@ import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 @Target(ElementType.FIELD)
 public @interface TypeSafeValue {
 	
+	/**
+	 * 読み書き時の整数値表現のための型の指定<br />
+	 * デフォルト値として int を持つ
+	 * 
+	 * @return 読み書き時の整数値表現のための型
+	 */
 	public abstract Class<?> storeType() default int.class;
 	
+	/**
+	 * 読み込み時に整数値表現からこのフィールドの型の値へ変換するメソッド名の指定<br />
+	 * このメソッドは，引数として int型へキャスト可能な 1つの引数を受け取り，
+	 * このフィールドの型へキャスト可能な戻り値を持たなければならない<br />
+	 * 典型的には次のシグネチャを持つべきである
+	 * <pre>
+	 * // should be defined in the [field's type] class
+	 * public static [field's type] [method name](int raw_value)
+	 * </pre>
+	 * 
+	 * @return 読み込み時に整数値表現からこのフィールドの型の値へ変換するメソッド名
+	 */
 	public abstract String fromStored();
 	
+	/**
+	 * 書き込み時にこのフィールドの値から整数値表現へ変換するメソッド名の指定<br />
+	 * このメソッドは，フィールドの値が持つメソッドとして呼び出せる様にアクセス修飾がなされ，
+	 * {@link #storeType()} 型へキャスト可能な戻り値を持たなければならない<br />
+	 * 典型的には次のシグネチャを持つべきである
+	 * <pre>
+	 * // should be defined in the [field's type] class
+	 * public [can be convert to {@link #storeType()}] [method name]()
+	 * </pre>
+	 * 
+	 * @return
+	 */
 	public abstract String toStore() default "ordinal";
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {

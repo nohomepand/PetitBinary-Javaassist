@@ -126,6 +126,7 @@ public final class PetitSerializer {
 						"$varWriter$.popType();\n" +
 						"$varWriter$.popByteOrder();\n" +
 					"}"), adapter_clazz));
+			
 			return (SerializeAdapter<?>) adapter_clazz.toClass()
 					.getConstructor(Class.class)
 					.newInstance(clazz);
