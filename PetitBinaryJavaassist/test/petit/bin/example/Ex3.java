@@ -2,13 +2,12 @@ package petit.bin.example;
 
 import petit.bin.anno.Struct;
 import petit.bin.anno.StructMember;
-import petit.bin.anno.field.EnumItem;
-import petit.bin.anno.field.EnumItem.NumberedEnum;
+import petit.bin.anno.field.TypeSafeValue;
 
 @Struct
 public class Ex3 extends AbstractExample {
 	
-	public static enum Foo implements NumberedEnum {
+	public static enum Foo {
 		
 		E1(0),
 		E2(1),
@@ -20,7 +19,6 @@ public class Ex3 extends AbstractExample {
 			N = n;
 		}
 		
-		@Override
 		public int toNumber() {
 			return N;
 		}
@@ -35,13 +33,14 @@ public class Ex3 extends AbstractExample {
 	}
 	
 	@StructMember(0)
-	@EnumItem(storeType = byte.class, enumResolver = "fromNumber")
+	@TypeSafeValue(storeType = byte.class, fromStored = "fromNumber", toStore = "toNumber")
 	protected Foo v1;
 	
 	public static void main(String[] args) throws Exception {
 		final Ex3 ao = new Ex3();
 		ao.v1 = Foo.E3;
 		System.out.println(dumpData(testSerializeObject(ao, 100)));
+		System.out.println(ao.v1);
 	}
 	
 }

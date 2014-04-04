@@ -52,13 +52,12 @@ public @interface ExternStruct {
 		public void checkField(CtField field) throws CannotCompileException {
 			try {
 				if (Enum.class.isAssignableFrom(Util.toClass(field.getDeclaringClass()).FIRST)) {
-					System.err.println(field + " is a Enum, " + EnumItem.class.getCanonicalName() + " annotation is more better way to use.");
+					System.err.println(field + " is a Enum, " + TypeSafeValue.class.getCanonicalName() + " annotation is better way to use.");
 				}
-				
-				return; //その他はOK
 			} catch (Exception e) {
 				throw new CannotCompileException(e);
 			}
+			return; //なんでもOK
 		}
 		
 		@Override

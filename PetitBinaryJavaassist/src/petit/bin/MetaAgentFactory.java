@@ -15,7 +15,6 @@ import javassist.CtMethod;
 import javassist.NotFoundException;
 import petit.bin.anno.MemberDefaultType;
 import petit.bin.anno.SupportType;
-import petit.bin.anno.field.EnumItem;
 import petit.bin.anno.field.ExternStruct;
 import petit.bin.anno.field.Float32;
 import petit.bin.anno.field.Float64;
@@ -24,6 +23,7 @@ import petit.bin.anno.field.Int32;
 import petit.bin.anno.field.Int64;
 import petit.bin.anno.field.Int8;
 import petit.bin.anno.field.Int8Boolean;
+import petit.bin.anno.field.TypeSafeValue;
 import petit.bin.anno.field.UInt16;
 import petit.bin.anno.field.UInt32;
 import petit.bin.anno.field.UInt8;
@@ -73,7 +73,7 @@ public final class MetaAgentFactory {
 		addMetaAgent(UInt16Array.class);
 		addMetaAgent(Float32Array.class);
 		addMetaAgent(Float64Array.class);
-		addMetaAgent(EnumItem.class);
+		addMetaAgent(TypeSafeValue.class);
 //		addMetaAgent(UInt16Array.class);
 		try {
 			{

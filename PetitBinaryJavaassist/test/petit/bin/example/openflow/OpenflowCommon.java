@@ -28,6 +28,20 @@ public final class OpenflowCommon {
 	    OFP15_VERSION(0x06),
 	    ;
 	    
+	    /**
+	     * 値から {@link OpenflowMessageType} へのマッピング
+	     */
+	    private static final OpenflowVersion[] MAPPER;
+	    
+	    static {
+	    	MAPPER = new OpenflowVersion[0x100];
+	    	for (final OpenflowVersion elm : OpenflowVersion.values())
+	    		MAPPER[elm.VERSION] = elm;
+	    }
+	    
+	    /**
+	     * 元の openflow.hの値
+	     */
 	    public final int VERSION;
 	    
 	    private OpenflowVersion(final int version) {
@@ -46,9 +60,9 @@ public final class OpenflowCommon {
 	     * @return 解決された列挙値
 	     */
 	    public static final OpenflowVersion fromNumber(final int v) {
-	    	if (!(OFP10_VERSION.VERSION <= v && v <= OFP15_VERSION.VERSION))
+	    	if (MAPPER[v & 0xff] == null)
 	    		throw new IllegalArgumentException("Openflow version " + v + " is undefined");
-	    	return OpenflowVersion.values()[v - 1];
+	    	return MAPPER[v & 0xff];
 	    }
 	    
 	}
@@ -165,12 +179,27 @@ public final class OpenflowCommon {
 		
 		
 		/* Bundle operations (multiple messages as a single operation). */
+		
 		/** Bundle operations (multiple messages as a single operation). */
 		OFPT_BUNDLE_CONTROL(33),
 		/** Bundle operations (multiple messages as a single operation). */
 		OFPT_BUNDLE_ADD_MESSAGE(34),
 		;
 		
+		/**
+		 * 値から {@link OpenflowMessageType} へのマッピング
+		 */
+		private static final OpenflowMessageType[] MAPPER;
+		
+		static {
+			MAPPER = new OpenflowMessageType[0x100];
+			for (final OpenflowMessageType elm : OpenflowMessageType.values())
+				MAPPER[elm.VALUE] = elm;
+		}
+		
+		/**
+		 * 元の openflow.hの値
+		 */
 		public final int VALUE;
 		
 		private OpenflowMessageType(final int value) {
@@ -182,14 +211,6 @@ public final class OpenflowCommon {
 			return VALUE;
 		}
 		
-		private static final OpenflowMessageType[] MAPPER; // 高々1バイト
-		
-		static {
-			MAPPER = new OpenflowMessageType[0x100];
-			for (final OpenflowMessageType elm : OpenflowMessageType.values())
-				MAPPER[elm.VALUE] = elm;
-		}
-		
 		/**
 	     * {@link EnumItem} アノテーションで指定する，数値から列挙値を解決するメソッド
 	     * 
@@ -197,9 +218,9 @@ public final class OpenflowCommon {
 	     * @return 解決された列挙値
 	     */
 	    public static final OpenflowMessageType fromNumber(final int v) {
-	    	if (MAPPER[v] == null)
+	    	if (MAPPER[v & 0xff] == null)
 	    		throw new IllegalArgumentException("Openflow message type " + v + " is undefined");
-	    	return MAPPER[v];
+	    	return MAPPER[v & 0xff];
 	    } 
 		
 	}
