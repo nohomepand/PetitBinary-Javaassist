@@ -85,7 +85,7 @@ public final class CodeGenerator {
 		/**
 		 * {@link SerializeAdapter} のcanonical name
 		 */
-		TypeSerAdap(KnownCtClass.ISERIALIZE_ADAPTER.BINARYNAME),
+		TypeSerAdap(KnownCtClass.SERIALIZE_ADAPTER.BINARYNAME),
 		
 		/**
 		 * {@link ReadableStore} のcanonical name
@@ -95,7 +95,7 @@ public final class CodeGenerator {
 		/**
 		 * {@link WritableStore} のcanonical name
 		 */
-		typeWriter(WritableStore.class.getCanonicalName()),
+		TypeWriter(WritableStore.class.getCanonicalName()),
 		;
 		
 		/**

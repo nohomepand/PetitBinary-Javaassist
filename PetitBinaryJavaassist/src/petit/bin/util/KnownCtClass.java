@@ -1,8 +1,8 @@
 package petit.bin.util;
 
 import javassist.CtClass;
-import petit.bin.SerializeAdapter;
 import petit.bin.PetitSerializer;
+import petit.bin.SerializeAdapter;
 import petit.bin.anno.Struct;
 import petit.bin.store.ReadableStore;
 import petit.bin.store.WritableStore;
@@ -50,7 +50,7 @@ public enum KnownCtClass {
 	/**
 	 * {@link SerializeAdapter} のfqn
 	 */
-	ISERIALIZE_ADAPTER(SerializeAdapter.class),
+	SERIALIZE_ADAPTER(SerializeAdapter.class),
 	;
 	
 	/**

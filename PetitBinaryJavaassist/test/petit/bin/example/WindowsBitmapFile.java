@@ -1,12 +1,6 @@
 package petit.bin.example;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileChannel.MapMode;
 
 import petit.bin.PetitSerializer;
 import petit.bin.SerializeAdapter;
@@ -20,7 +14,6 @@ import petit.bin.store.ReadableStore;
 import petit.bin.store.Store.SerializationByteOrder;
 import petit.bin.store.impl.FileStore;
 
-@SuppressWarnings("unused")
 @Struct(byteOrder = SerializationByteOrder.LITTLE_ENDIAN)
 public final class WindowsBitmapFile {
 	

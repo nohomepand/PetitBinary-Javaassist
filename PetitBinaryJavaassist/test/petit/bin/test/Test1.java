@@ -2,8 +2,8 @@ package petit.bin.test;
 
 import java.nio.ByteBuffer;
 
-import petit.bin.SerializeAdapter;
 import petit.bin.PetitSerializer;
+import petit.bin.SerializeAdapter;
 import petit.bin.anno.Struct;
 import petit.bin.anno.StructMember;
 import petit.bin.anno.array.ArraySizeByMethod;
@@ -42,10 +42,6 @@ public class Test1 {
 	@StructMember(5)
 	@ArraySizeConstant(5)
 	protected Inner1[] v6;
-	
-	private final void test1Private() {
-		System.out.println("aaa");
-	}
 	
 	@Struct
 	public static class Inner1 {
