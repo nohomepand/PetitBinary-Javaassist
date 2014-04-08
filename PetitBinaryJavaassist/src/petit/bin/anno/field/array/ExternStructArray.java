@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import javassist.CannotCompileException;
+import javassist.CtClass;
 import javassist.CtField;
 import javassist.CtMethod;
 import petit.bin.CodeGenerator;
@@ -73,7 +74,7 @@ public @interface ExternStructArray {
 		}
 		
 		@Override
-		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeReaderSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			try {
 				final ExternStructArray esaa = (ExternStructArray) field.getAnnotation(ExternStructArray.class);
 				if (esaa != null && esaa.value() != null && !esaa.value().isEmpty()) {
@@ -131,7 +132,7 @@ public @interface ExternStructArray {
 		}
 		
 		@Override
-		public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeWriterSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			try {
 				if (field.hasAnnotation(ExternStructArray.class)) { 
 					// field は内部で field's type とは異なる型のインスタンスを持っているかもしれない

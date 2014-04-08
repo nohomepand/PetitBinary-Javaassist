@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
@@ -159,21 +158,6 @@ public class Util {
 		for (final String str : args)
 			sb.append(str);
 		return sb.toString();
-	}
-	
-	/**
-	 * private final なフィールドを対象のクラスへ生成する
-	 * 
-	 * @param type フィールドの型
-	 * @param name フィールドの名前
-	 * @param parent 対象のクラス
-	 * @return 生成されたフィールド
-	 * @throws CannotCompileException
-	 */
-	public static final CtField createPrivateFinalField(final CtClass type, final String name, final CtClass parent) throws CannotCompileException {
-		final CtField field = new CtField(type, name, parent);
-		field.setModifiers(Modifier.PRIVATE | Modifier.FINAL);
-		return field;
 	}
 	
 	/**

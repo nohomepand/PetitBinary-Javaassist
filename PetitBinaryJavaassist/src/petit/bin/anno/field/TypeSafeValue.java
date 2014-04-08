@@ -8,16 +8,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javassist.CannotCompileException;
+import javassist.CtClass;
 import javassist.CtField;
+import javassist.Modifier;
 import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
+import petit.bin.util.KnownCtClass;
 
 /**
  * 広義の型安全な列挙型を表す<br />
- * ある列挙型 Eがあるとして，あるフィールド F の型が E の場合，F の書き込みは Eから整数値へ変換され，
- * 読み込みは整数値から Eへ変換される．<br />
+ * ある列挙型 Eがあるとして，あるフィールド F の型が E の場合，F の書き込みは Eから整数値または整数値の配列へ変換され，
+ * 読み込みは整数値または整数値の配列から Eへ変換される．<br />
  * <br />
- * 読み込み時は， {@link #storeType()} で示される型に基づいて整数が読み取られ，
+ * このフィールドのインスタンスの解決は {@link ExternStruct} と異なり，このフィールドのクラスで行われる<br />
+ * <br />
+ * 読み込み時は， {@link #storeType()} で示される型に基づいて整数または整数値の配列が読み取られ，
  * {@link #fromStored()} で示される，シグネチャとして (I)Ljava/lang/Object; を持つメソッドへ渡され，
  * フィールドの値としてその戻り値が割り当てられる<br />
  * <br />
@@ -91,7 +96,7 @@ import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
 public @interface TypeSafeValue {
 	
 	/**
-	 * 読み書き時の整数値表現のための型の指定<br />
+	 * 読み書き時の整数値または整数値の配列(値表現)の指定<br />
 	 * デフォルト値として int を持つ
 	 * 
 	 * @return 読み書き時の整数値表現のための型
@@ -99,13 +104,13 @@ public @interface TypeSafeValue {
 	public abstract Class<?> storeType() default int.class;
 	
 	/**
-	 * 読み込み時に整数値表現からこのフィールドの型の値へ変換するメソッド名の指定<br />
-	 * このメソッドは，引数として int型へキャスト可能な 1つの引数を受け取り，
+	 * 読み込み時に整数値または整数値の配列(値表現)からこのフィールドの型の値へ変換するメソッド名の指定<br />
+	 * このメソッドは，引数として {@link #storeType()} 型へキャスト可能な 1つの引数を受け取り，
 	 * このフィールドの型へキャスト可能な戻り値を持たなければならない<br />
 	 * 典型的には次のシグネチャを持つべきである
 	 * <pre>
 	 * // should be defined in the [field's type] class
-	 * public static [field's type] [method name](int raw_value)
+	 * public static [field's type] [method name]({@link #storeType()} raw_value)
 	 * </pre>
 	 * 
 	 * @return 読み込み時に整数値表現からこのフィールドの型の値へ変換するメソッド名
@@ -113,7 +118,7 @@ public @interface TypeSafeValue {
 	public abstract String fromStored();
 	
 	/**
-	 * 書き込み時にこのフィールドの値から整数値表現へ変換するメソッド名の指定<br />
+	 * 書き込み時にこのフィールドの値から整数値または整数値の配列(値表現)へ変換するメソッド名の指定<br />
 	 * このメソッドは，フィールドの値が持つメソッドとして呼び出せる様にアクセス修飾がなされ，
 	 * {@link #storeType()} 型へキャスト可能な戻り値を持たなければならない<br />
 	 * 典型的には次のシグネチャを持つべきである
@@ -122,9 +127,16 @@ public @interface TypeSafeValue {
 	 * public [can be convert to {@link #storeType()}] [method name]()
 	 * </pre>
 	 * 
-	 * @return
+	 * @return 書き込み時にこのフィールドの値から整数値表現へ変換するメソッド名の指定
 	 */
 	public abstract String toStore() default "ordinal";
+	
+	/**
+	 * {@link #storeType()} が配列型の場合，その配列の固定長を指定する
+	 * 
+	 * @return {@link #storeType()} が配列の場合そのサイズ
+	 */
+	public abstract int arraySize() default 0;
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
 		
@@ -135,14 +147,23 @@ public @interface TypeSafeValue {
 			store_access_suffix.put(byte.class, "Int8");
 			store_access_suffix.put(short.class, "Int16");
 			store_access_suffix.put(int.class, "Int32");
+			store_access_suffix.put(long.class, "Int64");
 		}
 		
 		@Override
 		public void checkField(CtField field) throws CannotCompileException {
 			try {
 				final TypeSafeValue anno = (TypeSafeValue) field.getAnnotation(TypeSafeValue.class);
-				if (!store_access_suffix.containsKey(anno.storeType()))
-					throw new CannotCompileException(field + ": " + anno.storeType() + " must be one of " + store_access_suffix.keySet());
+				final Class<?> st = anno.storeType();
+				final Class<?> ct;
+				if (st.isArray()) {
+					if (anno.arraySize() < 0)
+						throw new CannotCompileException(field + ": If the value type is an array, arraySize must be more than 0(arraySize=" + anno.arraySize() + ")");
+					ct = st.getComponentType();
+				} else
+					ct = st;
+				if (!store_access_suffix.containsKey(ct))
+					throw new CannotCompileException(field + ": " + ct + " must be one of " + store_access_suffix.keySet());
 				
 				return;
 			} catch (Exception e) {
@@ -151,29 +172,72 @@ public @interface TypeSafeValue {
 		}
 		
 		@Override
-		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeReaderSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			try {
 				final TypeSafeValue anno = (TypeSafeValue) field.getAnnotation(TypeSafeValue.class);
-				cg.map("strStoreAccessSuffix", store_access_suffix.get(anno.storeType()));
-				cg.map("strFromStoredMethod", anno.fromStored());
-				return cg.replaceAll(
-						"$varField$ = ($typeField$) $typeField$.$strFromStoredMethod$((int) $varReader$.read$strStoreAccessSuffix$());"
-						);
+				final Class<?> st = anno.storeType();
+				if (st.isArray()) {
+					final Class<?> ct = st.getComponentType();
+					final String stocker_field = "_stocker_" + field.getName();
+					final CtField f = new CtField(KnownCtClass.OBJECT_STOCKER.CT_CLAZZ, stocker_field, adapter_clazz);
+					f.setModifiers(Modifier.PRIVATE | Modifier.FINAL);
+					adapter_clazz.addField(f, "new " + KnownCtClass.OBJECT_STOCKER.CANONICALNAME + "()");
+					cg.map("strStoreAccessSuffix", store_access_suffix.get(ct));
+					cg.map("strFromStoredMethod", anno.fromStored());
+					cg.map("valStoreSize", Integer.toString(anno.arraySize()));
+					cg.map("typeStore", ct.getSimpleName());
+					cg.map("varStocker", stocker_field);
+					cg.map("typeStockObject", KnownCtClass.STOCK_OBJECT.CANONICALNAME);
+					return cg.replaceAll(
+							"{\n" +
+							"	if (!this.$varStocker$.hasStock())\n" +
+							"		this.$varStocker$.stock(new $typeStore$[$valStoreSize$]);\n" +
+							"	$typeStockObject$ stockObj = this.$varStocker$.take();\n" +
+							"	$typeStore$[] ar = ($typeStore$[]) stockObj.get();\n" +
+							"	for (int i = 0; i < ar.length; i++)\n" +
+							"		ar[i] = $varReader$.read$strStoreAccessSuffix$();\n" +
+							"	$varField$ = ($typeField$) $typeField$.$strFromStoredMethod$(ar);\n" +
+							"	stockObj.release();\n" +
+							"}");
+				} else {
+					cg.map("strStoreAccessSuffix", store_access_suffix.get(st));
+					cg.map("strFromStoredMethod", anno.fromStored());
+					cg.map("typeStore", st.getSimpleName());
+					return cg.replaceAll(
+							"$varField$ = ($typeField$) $typeField$.$strFromStoredMethod$(($typeStore$) $varReader$.read$strStoreAccessSuffix$());"
+							);
+				}
 			} catch (ClassNotFoundException e) {
 				throw new CannotCompileException(e);
 			}
 		}
 		
 		@Override
-		public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeWriterSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			try {
 				final TypeSafeValue anno = (TypeSafeValue) field.getAnnotation(TypeSafeValue.class);
-				cg.map("typeStore", anno.storeType().getSimpleName());
-				cg.map("strStoreAccessSuffix", store_access_suffix.get(anno.storeType()));
-				cg.map("strToStoreMethod", anno.toStore());
-				return cg.replaceAll(
-						"if ($varField$ != null) \n" +
-						"	$varWriter$.write$strStoreAccessSuffix$(($typeStore$) $varField$.$strToStoreMethod$());");
+				final Class<?> st = anno.storeType();
+				if (st.isArray()) {
+					final Class<?> ct = st.getComponentType();
+					cg.map("strStoreAccessSuffix", store_access_suffix.get(ct));
+					cg.map("strToStoreMethod", anno.toStore());
+					cg.map("valStoreSize", Integer.toString(anno.arraySize()));
+					cg.map("typeStore", ct.getSimpleName());
+					return cg.replaceAll(
+							"if ($varField$ != null) {\n" +
+							"	$typeStore$[] ar = $varField$.$strToStoreMethod$();\n" +
+							"	if (ar != null)\n" +
+							"		for (int i = 0; i < ar.length; i++)\n" +
+							"			$varWriter$.write$strStoreAccessSuffix$(ar[i]);\n" +
+							"}");
+				} else {
+					cg.map("typeStore", anno.storeType().getSimpleName());
+					cg.map("strStoreAccessSuffix", store_access_suffix.get(anno.storeType()));
+					cg.map("strToStoreMethod", anno.toStore());
+					return cg.replaceAll(
+							"if ($varField$ != null) \n" +
+							"	$varWriter$.write$strStoreAccessSuffix$(($typeStore$) $varField$.$strToStoreMethod$());");
+				}
 			} catch (ClassNotFoundException e) {
 				throw new CannotCompileException(e);
 			}

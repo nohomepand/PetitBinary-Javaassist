@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import javassist.CannotCompileException;
+import javassist.CtClass;
 import javassist.CtField;
 import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
@@ -48,7 +49,7 @@ public @interface UInt16Array {
 		}
 		
 		@Override
-		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeReaderSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			return cg.replaceAll(
 					"{\n" +
 					"	int size = $exprFieldSizeGetter$;\n" +
@@ -60,7 +61,7 @@ public @interface UInt16Array {
 		}
 		
 		@Override
-		public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeWriterSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			return cg.replaceAll(
 					"if ($varField$ != null) {\n" +
 					"	for (int i = 0; i < $varField$.length; i++)\n" +

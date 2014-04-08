@@ -1,6 +1,7 @@
 package petit.bin.anno.field;
 
 import javassist.CannotCompileException;
+import javassist.CtClass;
 import javassist.CtField;
 import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
@@ -40,7 +41,7 @@ public abstract class PrimitiveTypeMetaAgent extends MemberAnnotationMetaAgent {
 	}
 	
 	@Override
-	public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+	public String makeReaderSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 		if (FOR_WIDENING != null) {
 			return cg.replaceAll("$varField$ = (" + WRITTING_CAST + ") ($varReader$.read" + STORE_METHOD_SUFFIX + "() & " + FOR_WIDENING + ");");
 		} else {
@@ -50,7 +51,7 @@ public abstract class PrimitiveTypeMetaAgent extends MemberAnnotationMetaAgent {
 	}
 	
 	@Override
-	public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+	public String makeWriterSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 		if (FOR_WIDENING != null) {
 			return cg.replaceAll("$varWriter$.write" + STORE_METHOD_SUFFIX + "((" + WRITTING_CAST + ") ($varField$ & " + FOR_WIDENING + "));");
 		} else {

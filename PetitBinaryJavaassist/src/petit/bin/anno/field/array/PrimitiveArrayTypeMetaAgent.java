@@ -1,6 +1,7 @@
 package petit.bin.anno.field.array;
 
 import javassist.CannotCompileException;
+import javassist.CtClass;
 import javassist.CtField;
 import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
@@ -36,7 +37,7 @@ public abstract class PrimitiveArrayTypeMetaAgent extends MemberAnnotationMetaAg
 	}
 	
 	@Override
-	public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+	public String makeReaderSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 		return cg.replaceAll(
 				"{\n" +
 				"	int size = $exprFieldSizeGetter$;\n" +
@@ -48,7 +49,7 @@ public abstract class PrimitiveArrayTypeMetaAgent extends MemberAnnotationMetaAg
 	}
 	
 	@Override
-	public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+	public String makeWriterSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 		return cg.replaceAll(
 				"if ($varField$ != null) {\n" +
 				"	for (int i = 0; i < $varField$.length; i++)\n" +

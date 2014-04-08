@@ -266,18 +266,22 @@ public final class MetaAgentFactory {
 		/**
 		 * 対象のメンバに対する読み込みを表すソースコードを生成する
 		 * 
-		 * @param vVarField 対象のメンバ
+		 * @param adapter_clazz ソースコードが格納されるメソッドを定義するクラス
+		 * @param field 対象のメンバ
+		 * @param cg コード生成機
 		 * @return 対象のメンバに対する読み込みを表すソースコード
 		 */
-		public abstract String makeReaderSource(final CtField field, final CodeGenerator cg) throws CannotCompileException;
+		public abstract String makeReaderSource(final CtClass adapter_clazz, final CtField field, final CodeGenerator cg) throws CannotCompileException;
 		
 		/**
 		 * 対象のメンバを書き込むことを表すソースコードを生成する
 		 * 
-		 * @param vVarField 対象のメンバ
+		 * @param adapter_clazz ソースコードが格納されるメソッドを定義するクラス
+		 * @param field 対象のメンバ
+		 * @param cg コード生成機
 		 * @return 対象のメンバを書き込むことを表すソースコード
 		 */
-		public abstract String makeWriterSource(final CtField field, final CodeGenerator cg) throws CannotCompileException;
+		public abstract String makeWriterSource(final CtClass adapter_clazz, final CtField field, final CodeGenerator cg) throws CannotCompileException;
 		
 	}
 }

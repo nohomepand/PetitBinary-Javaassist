@@ -101,7 +101,7 @@ public final class PetitSerializer {
 							"$varReader$.pushByteOrder($varTargetStructAnnotation$.byteOrder());\n" +
 							"$varReader$.pushType($varTargetClass$);\n" +
 							
-							makeReadFields(managed_fields, cg) +
+							makeReadFields(adapter_clazz, managed_fields, cg) +
 							
 							"$varReader$.popType();\n" +
 							"$varReader$.popByteOrder();\n" +
@@ -114,7 +114,7 @@ public final class PetitSerializer {
 							"$varWriter$.pushByteOrder($varTargetStructAnnotation$.byteOrder());\n" +
 							"$varWriter$.pushType($varTargetClass$);\n" +
 							
-							makeWriteFields(managed_fields, cg) +
+							makeWriteFields(adapter_clazz, managed_fields, cg) +
 							
 							"$varWriter$.popType();\n" +
 							"$varWriter$.popByteOrder();\n" +
@@ -142,7 +142,7 @@ public final class PetitSerializer {
 		}
 	}
 	
-	private static final String makeReadFields(final List<CtField> managed_fields, final CodeGenerator cg) throws CannotCompileException {
+	private static final String makeReadFields(final CtClass adapter_clazz, final List<CtField> managed_fields, final CodeGenerator cg) throws CannotCompileException {
 		final StringBuilder sb = new StringBuilder();
 		
 		/*
@@ -156,13 +156,13 @@ public final class PetitSerializer {
 				throw new UnsupportedOperationException("Cannot find meta-agent for " + field + " (MAY BE BUG)");
 			ma.checkField(field);
 			cg.attachField(field);
-			sb.append(ma.makeReaderSource(field, cg)).append("\n");
+			sb.append(ma.makeReaderSource(adapter_clazz, field, cg)).append("\n");
 		}
 		cg.detachField();
 		return sb.toString();
 	}
 	
-	private static final String makeWriteFields(final List<CtField> managed_fields, final CodeGenerator cg) throws CannotCompileException {
+	private static final String makeWriteFields(final CtClass adapter_clazz, final List<CtField> managed_fields, final CodeGenerator cg) throws CannotCompileException {
 		final StringBuilder sb = new StringBuilder();
 		
 		/*
@@ -176,7 +176,7 @@ public final class PetitSerializer {
 				throw new UnsupportedOperationException("Cannot find meta-agent for " + field + " (MAY BE BUG)");
 			ma.checkField(field);
 			cg.attachField(field);
-			sb.append(ma.makeWriterSource(field, cg)).append("\n");
+			sb.append(ma.makeWriterSource(adapter_clazz, field, cg)).append("\n");
 		}
 		cg.detachField();
 		return sb.toString();

@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import javassist.CannotCompileException;
+import javassist.CtClass;
 import javassist.CtField;
 import javassist.CtMethod;
 import petit.bin.CodeGenerator;
@@ -61,7 +62,7 @@ public @interface ExternStruct {
 		}
 		
 		@Override
-		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeReaderSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			try {
 				final ExternStruct esa = (ExternStruct) field.getAnnotation(ExternStruct.class);
 				if (esa != null && esa.value() != null && !esa.value().isEmpty()) {
@@ -108,7 +109,7 @@ public @interface ExternStruct {
 		}
 		
 		@Override
-		public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeWriterSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			/*
 			 * if (<vVarField> != null) {
 			 *     <SerializeAdapter> sa = <PetitSerializer>.getSerializer(<vVarField>.getClass());

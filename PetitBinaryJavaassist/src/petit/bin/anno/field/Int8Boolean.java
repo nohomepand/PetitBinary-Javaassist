@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import javassist.CannotCompileException;
+import javassist.CtClass;
 import javassist.CtField;
 import petit.bin.CodeGenerator;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
@@ -36,12 +37,12 @@ public @interface Int8Boolean {
 	
 	public static final class _MA extends MemberAnnotationMetaAgent {
 		@Override
-		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeReaderSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			return cg.replaceAll("$varField$ = $varReader$.readInt8() != 0;");
 		}
 		
 		@Override
-		public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeWriterSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			return cg.replaceAll("$varWriter$.writeInt8((byte) ($varField$ ? 1 : 0));");
 		}
 		

@@ -51,6 +51,17 @@ public enum KnownCtClass {
 	 * {@link SerializeAdapter} のfqn
 	 */
 	SERIALIZE_ADAPTER(SerializeAdapter.class),
+	
+	/**
+	 * {@link ObjectStocker} に対応するもの
+	 */
+	OBJECT_STOCKER(ObjectStocker.class),
+	
+	/**
+	 * {@link StockObject} に対応するもの
+	 */
+	STOCK_OBJECT(ObjectStocker.StockObject.class);
+	
 	;
 	
 	/**

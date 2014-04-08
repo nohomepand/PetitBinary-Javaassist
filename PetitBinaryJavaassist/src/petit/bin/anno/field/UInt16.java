@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import javassist.CannotCompileException;
+import javassist.CtClass;
 import javassist.CtField;
 
 import petit.bin.CodeGenerator;
@@ -39,12 +40,12 @@ public @interface UInt16 {
 	public static final class _MA extends MemberAnnotationMetaAgent {
 		
 		@Override
-		public String makeReaderSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeReaderSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			return cg.replaceAll("$varField$ = (char) ($varReader$.readInt16() & 0xffff);");
 		}
 		
 		@Override
-		public String makeWriterSource(CtField field, CodeGenerator cg) throws CannotCompileException {
+		public String makeWriterSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			return cg.replaceAll("$varWriter$.writeInt16((short) ($varField$ & 0xffff));");
 		}
 		
