@@ -37,4 +37,18 @@ public @interface Struct {
 	 */
 	public abstract SerializationByteOrder byteOrder() default SerializationByteOrder.NEUTRAL;
 	
+	/**
+	 * 読み込み後の検証機を表すメソッド名
+	 * 
+	 * @return 読み込み後の検証機を表すメソッド名
+	 */
+	public abstract String readValidator() default "";
+	
+	/**
+	 * 書き込み前の検証機を表すメソッド名
+	 * 
+	 * @return 書き込み前の検証機を表すメソッド名
+	 */
+	public abstract String writeValidator() default "";
+	
 }

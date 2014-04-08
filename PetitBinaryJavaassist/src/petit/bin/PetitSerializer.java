@@ -12,6 +12,7 @@ import javassist.CtMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import petit.bin.MetaAgentFactory.MemberAnnotationMetaAgent;
+import petit.bin.anno.Struct;
 import petit.bin.util.DefaultClassPool;
 import petit.bin.util.KnownCtClass;
 import petit.bin.util.Util;
@@ -94,8 +95,10 @@ public final class PetitSerializer {
 				adapter_clazz.addConstructor(adapter_ctor);
 				
 				// add serialization methods
-				
+				final Struct anno = clazz.getAnnotation(Struct.class);
 				// for reader
+				final String rv = anno.readValidator();
+				final String invoke_read_validator = (rv == null || rv.isEmpty()) ? "" : "((" + clazz.getCanonicalName() + ") ao)." + rv + "();\n";
 				adapter_clazz.addMethod(makeMethod(cg.replaceAll(
 						"public final Object read(Object ao, $typeReader$ $varReader$) throws Exception {\n" +
 							"$varReader$.pushByteOrder($varTargetStructAnnotation$.byteOrder());\n" +
@@ -105,12 +108,16 @@ public final class PetitSerializer {
 							
 							"$varReader$.popType();\n" +
 							"$varReader$.popByteOrder();\n" +
+							invoke_read_validator +
 							"return ao;\n" +
 						"}"), adapter_clazz));
 				
 				// for writer
+				final String wv = anno.writeValidator();
+				final String invoke_write_validator = (wv == null || wv.isEmpty()) ? "" : "((" + clazz.getCanonicalName() + ") ao)." + wv + "();\n";
 				adapter_clazz.addMethod(makeMethod(cg.replaceAll(
 						"public final void write(Object ao, $TypeWriter$ $varWriter$) throws Exception {\n" +
+							invoke_write_validator +
 							"$varWriter$.pushByteOrder($varTargetStructAnnotation$.byteOrder());\n" +
 							"$varWriter$.pushType($varTargetClass$);\n" +
 							
@@ -145,10 +152,6 @@ public final class PetitSerializer {
 	private static final String makeReadFields(final CtClass adapter_clazz, final List<CtField> managed_fields, final CodeGenerator cg) throws CannotCompileException {
 		final StringBuilder sb = new StringBuilder();
 		
-		/*
-		 * <target_class> <ACCESS_INSTANCE.ID> = (<target_class>) ao;
-		 * <read elements>
-		 */
 		sb.append(cg.replaceAll("$typeTargetClass$ $varTarget$ = ($typeTargetClass$) ao;")).append("\n");
 		for (final CtField field : managed_fields) {
 			final MemberAnnotationMetaAgent ma = MetaAgentFactory.getMetaAgent(field);

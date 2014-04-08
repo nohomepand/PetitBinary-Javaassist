@@ -6,7 +6,7 @@ import petit.bin.anno.Struct;
 import petit.bin.anno.StructMember;
 import petit.bin.anno.field.TypeSafeValue;
 
-@Struct
+@Struct(readValidator = "readValidator")
 public class Ex3 extends AbstractExample {
 	
 	public static enum Foo {
@@ -64,6 +64,10 @@ public class Ex3 extends AbstractExample {
 	@StructMember(1)
 	@TypeSafeValue(storeType = byte[].class, arraySize = 5, fromStored = "fromStored", toStore = "toStore")
 	protected Bar v2;
+	
+	protected void readValidator() {
+		System.out.println("Validate! " + this.v1 + " | " + this.v2);
+	}
 	
 	public static void main(String[] args) throws Exception {
 		final Ex3 ao = new Ex3();
