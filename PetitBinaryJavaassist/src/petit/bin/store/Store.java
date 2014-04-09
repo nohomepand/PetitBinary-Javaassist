@@ -105,4 +105,26 @@ public interface Store {
 	 */
 	public abstract void setPosition(final int pos);
 	
+	/**
+	 * このストアに付随するコンテキスト情報を設定する
+	 * 
+	 * @param ctx コンテキスト情報
+	 */
+	public abstract void setContext(final Object ctx);
+	
+	/**
+	 * このストアに付随するコンテキスト情報を得る
+	 * 
+	 * @return このストアに付随するコンテキスト情報
+	 */
+	public abstract Object getContext();
+	
+	/**
+	 * このストアに付随するコンテキスト情報を得る
+	 * 
+	 * @param as キャストする型
+	 * @return このストアに付随するコンテキスト情報
+	 */
+	public abstract <T> T getContext(final Class<T> as);
+	
 }

@@ -74,4 +74,17 @@ public class MockReadableStore implements ReadableStore {
 		return 0;
 	}
 	
+	@Override
+	public Object getContext() {
+		return null;
+	}
+	
+	@Override
+	public <T> T getContext(Class<T> as) {
+		return null;
+	}
+	
+	@Override
+	public void setContext(Object ctx) {}
+	
 }

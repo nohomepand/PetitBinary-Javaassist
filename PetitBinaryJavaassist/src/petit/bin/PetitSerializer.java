@@ -98,9 +98,9 @@ public final class PetitSerializer {
 				final Struct anno = clazz.getAnnotation(Struct.class);
 				// for reader
 				final String rv = anno.readValidator();
-				final String invoke_read_validator = (rv == null || rv.isEmpty()) ? "" : "((" + clazz.getCanonicalName() + ") ao)." + rv + "();\n";
+				final String invoke_read_validator = (rv == null || rv.isEmpty()) ? "" : "((" + clazz.getCanonicalName() + ") ao)." + rv + "($varReader$);\n";
 				adapter_clazz.addMethod(makeMethod(cg.replaceAll(
-						"public Object read(Object ao, $typeReader$ $varReader$) throws Exception {\n" +
+						"public final Object read(Object ao, $typeReader$ $varReader$) throws Exception {\n" +
 							"$varReader$.pushByteOrder($varTargetStructAnnotation$.byteOrder());\n" +
 							"$varReader$.pushType($varTargetClass$);\n" +
 							
@@ -114,9 +114,9 @@ public final class PetitSerializer {
 				
 				// for writer
 				final String wv = anno.writeValidator();
-				final String invoke_write_validator = (wv == null || wv.isEmpty()) ? "" : "((" + clazz.getCanonicalName() + ") ao)." + wv + "();\n";
+				final String invoke_write_validator = (wv == null || wv.isEmpty()) ? "" : "((" + clazz.getCanonicalName() + ") ao)." + wv + "($varWriter$);\n";
 				adapter_clazz.addMethod(makeMethod(cg.replaceAll(
-						"public void write(Object ao, $TypeWriter$ $varWriter$) throws Exception {\n" +
+						"public final void write(Object ao, $TypeWriter$ $varWriter$) throws Exception {\n" +
 							invoke_write_validator +
 							"$varWriter$.pushByteOrder($varTargetStructAnnotation$.byteOrder());\n" +
 							"$varWriter$.pushType($varTargetClass$);\n" +

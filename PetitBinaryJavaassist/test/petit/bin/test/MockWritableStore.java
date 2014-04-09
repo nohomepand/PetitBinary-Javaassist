@@ -68,4 +68,17 @@ public class MockWritableStore implements WritableStore {
 		if (STDOUT) System.out.println("WriteDouble");
 	}
 	
+	@Override
+	public Object getContext() {
+		return null;
+	}
+	
+	@Override
+	public <T> T getContext(Class<T> as) {
+		return null;
+	}
+	
+	@Override
+	public void setContext(Object ctx) {}
+	
 }

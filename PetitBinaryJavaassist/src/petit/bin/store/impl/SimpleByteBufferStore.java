@@ -21,6 +21,8 @@ public class SimpleByteBufferStore implements ReadableStore, WritableStore {
 	
 	private final LinkedList<SerializationByteOrder> _sb_stack;
 	
+	private Object _ctx;
+	
 	/**
 	 * 初期化
 	 * 
@@ -32,6 +34,7 @@ public class SimpleByteBufferStore implements ReadableStore, WritableStore {
 		
 		_buf = buf;
 		_sb_stack = new LinkedList<>();
+		_ctx = null;
 	}
 	
 	@Override
@@ -140,6 +143,22 @@ public class SimpleByteBufferStore implements ReadableStore, WritableStore {
 	@Override
 	public double readDouble() throws IOException {
 		return _buf.getDouble();
+	}
+	
+	@Override
+	public Object getContext() {
+		return _ctx;
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getContext(Class<T> as) {
+		return (T) _ctx;
+	}
+	
+	@Override
+	public void setContext(Object ctx) {
+		_ctx = ctx;
 	}
 	
 }

@@ -44,6 +44,8 @@ public final class FileStore implements ReadableStore, WritableStore {
 	
 	private final LinkedList<SerializationByteOrder> _bs;
 	
+	private Object _ctx;
+	
 	/**
 	 * 初期化
 	 * 
@@ -59,6 +61,7 @@ public final class FileStore implements ReadableStore, WritableStore {
 		_fc = fc;
 		_buf = mbb;
 		_bs = new LinkedList<>();
+		_ctx = null;
 	}
 	
 	public final MappedByteBuffer buffer() {
@@ -178,6 +181,22 @@ public final class FileStore implements ReadableStore, WritableStore {
 	@Override
 	public double readDouble() throws IOException {
 		return _buf.getDouble();
+	}
+	
+	@Override
+	public Object getContext() {
+		return _ctx;
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getContext(Class<T> as) {
+		return (T) as;
+	}
+	
+	@Override
+	public void setContext(Object ctx) {
+		_ctx = ctx;
 	}
 	
 }

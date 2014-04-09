@@ -48,6 +48,18 @@ public class Ex2 extends AbstractExample {
 		
 		ao.set(new BinaryString.BString("foo"));
 		System.out.println(dumpData(testSerializeObject(ao, 100)));
+		/*
+			petit.bin.example.Ex2#_flag:ok
+			petit.bin.example.Ex2#_str:ok
+			petit.bin.example.AbstractExample#HEX_TABLE:skip (private or not present StructMember annotation)
+			      | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +ObjectStocker +B  +C +D +E +F
+			     0| 01 66 6F 6F  00                                    |  foo            |
+			petit.bin.example.Ex2#_flag:ok
+			petit.bin.example.Ex2#_str:ok
+			petit.bin.example.AbstractExample#HEX_TABLE:skip (private or not present StructMember annotation)
+			      | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +ObjectStocker +B  +C +D +E +F
+			     0| 00 03 00 00  00 66 6F 6F                           |      foo        |
+		 */
 	}
 	
 }

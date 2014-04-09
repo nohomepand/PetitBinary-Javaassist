@@ -5,6 +5,7 @@ import java.util.Arrays;
 import petit.bin.anno.Struct;
 import petit.bin.anno.StructMember;
 import petit.bin.anno.field.TypeSafeValue;
+import petit.bin.store.ReadableStore;
 
 @Struct(readValidator = "readValidator")
 public class Ex3 extends AbstractExample {
@@ -65,7 +66,7 @@ public class Ex3 extends AbstractExample {
 	@TypeSafeValue(storeType = byte[].class, arraySize = 5, fromStored = "fromStored", toStore = "toStore")
 	protected Bar v2;
 	
-	protected void readValidator() {
+	protected void readValidator(final ReadableStore rs) {
 		System.out.println("Validate! " + this.v1 + " | " + this.v2);
 	}
 	
