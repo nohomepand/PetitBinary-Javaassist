@@ -143,7 +143,6 @@ public final class PetitSerializer {
 	
 	private static final CtMethod makeMethod(final String code, final CtClass decl) throws CannotCompileException {
 		try {
-			System.err.println(code);
 			return CtMethod.make(code, decl);
 		} catch (CannotCompileException e) {
 			System.err.println(code);
