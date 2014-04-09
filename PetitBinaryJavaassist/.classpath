@@ -3,6 +3,6 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="lib" path="lib/javassist3.18.1-GA_JASSIST-186apply.jar" sourcepath="lib/javaassist3.18.1-GA_src.zip"/>
+	<classpathentry kind="lib" path="lib/javassist3.18.1-GA_JASSIST-186apply_MemberCodeGen_long_double_fixed.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

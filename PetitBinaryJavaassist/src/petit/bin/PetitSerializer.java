@@ -100,7 +100,7 @@ public final class PetitSerializer {
 				final String rv = anno.readValidator();
 				final String invoke_read_validator = (rv == null || rv.isEmpty()) ? "" : "((" + clazz.getCanonicalName() + ") ao)." + rv + "();\n";
 				adapter_clazz.addMethod(makeMethod(cg.replaceAll(
-						"public final Object read(Object ao, $typeReader$ $varReader$) throws Exception {\n" +
+						"public Object read(Object ao, $typeReader$ $varReader$) throws Exception {\n" +
 							"$varReader$.pushByteOrder($varTargetStructAnnotation$.byteOrder());\n" +
 							"$varReader$.pushType($varTargetClass$);\n" +
 							
@@ -116,7 +116,7 @@ public final class PetitSerializer {
 				final String wv = anno.writeValidator();
 				final String invoke_write_validator = (wv == null || wv.isEmpty()) ? "" : "((" + clazz.getCanonicalName() + ") ao)." + wv + "();\n";
 				adapter_clazz.addMethod(makeMethod(cg.replaceAll(
-						"public final void write(Object ao, $TypeWriter$ $varWriter$) throws Exception {\n" +
+						"public void write(Object ao, $TypeWriter$ $varWriter$) throws Exception {\n" +
 							invoke_write_validator +
 							"$varWriter$.pushByteOrder($varTargetStructAnnotation$.byteOrder());\n" +
 							"$varWriter$.pushType($varTargetClass$);\n" +
@@ -127,6 +127,8 @@ public final class PetitSerializer {
 							"$varWriter$.popByteOrder();\n" +
 						"}"), adapter_clazz));
 				
+				
+				adapter_clazz.debugWriteFile("z:\\");
 				return (SerializeAdapter<?>) adapter_clazz.toClass()
 						.getConstructor(Class.class)
 						.newInstance(clazz);
@@ -141,6 +143,7 @@ public final class PetitSerializer {
 	
 	private static final CtMethod makeMethod(final String code, final CtClass decl) throws CannotCompileException {
 		try {
+			System.err.println(code);
 			return CtMethod.make(code, decl);
 		} catch (CannotCompileException e) {
 			System.err.println(code);

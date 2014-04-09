@@ -56,6 +56,7 @@ public abstract class PrimitiveTypeMetaAgent extends MemberAnnotationMetaAgent {
 			return cg.replaceAll("$varWriter$.write" + STORE_METHOD_SUFFIX + "((" + WRITTING_CAST + ") ($varField$ & " + FOR_WIDENING + "));");
 		} else {
 			return cg.replaceAll("$varWriter$.write" + STORE_METHOD_SUFFIX + "((" + WRITTING_CAST + ") $varField$);");
+//			return cg.replaceAll("$varWriter$.write" + STORE_METHOD_SUFFIX + "($varField$);");
 		}
 		
 	}
