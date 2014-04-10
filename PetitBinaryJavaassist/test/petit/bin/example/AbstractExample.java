@@ -34,7 +34,7 @@ public abstract class AbstractExample {
 	}
 	
 	/**
-	 * Returns OpenflowVersion formatted hex-decimal string. The following text will be returned.
+	 * Returns formatted hex-decimal string. The following text will be returned.
 	 * <pre>
 	 *       | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +FileStore +B  +C +D +E +F
 	 *      0| E3 81 82 E3  81 82 E3 81  82 E3 81 82  E3 81 82 E3 | ã  ã  ã  ã  ã  ã|
@@ -43,8 +43,8 @@ public abstract class AbstractExample {
 	 *     30| ...
 	 * </pre>
 	 * 
-	 * @param buf OpenflowVersion buffer to display
-	 * @return OpenflowVersion formatted hex-decimal string
+	 * @param buf buffer to display
+	 * @return formatted hex-decimal string
 	 */
 	public static final String dumpData(final ByteBuffer buf) {
 		final String header = "      | +0 +1 +2 +3  +4 +5 +6 +7  +8 +9 +ObjectStocker +B  +C +D +E +F";
@@ -121,7 +121,7 @@ public abstract class AbstractExample {
 	
 	protected final String hoge(int i) {
 		System.out.println(i);
-		return "OpenflowVersion";
+		return "hoge";
 	}
 	
 }

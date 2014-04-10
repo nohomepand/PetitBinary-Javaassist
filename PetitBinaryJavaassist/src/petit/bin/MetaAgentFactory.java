@@ -116,7 +116,7 @@ public final class MetaAgentFactory {
 			if (MemberAnnotationMetaAgent.class.isAssignableFrom(mc))
 				return mc;
 		}
-		throw new UnsupportedOperationException("Cannot find OpenflowVersion sub-class of " + MemberAnnotationMetaAgent.class.getCanonicalName() + " in " + member_anno);
+		throw new UnsupportedOperationException("Cannot find sub-class of " + MemberAnnotationMetaAgent.class.getCanonicalName() + " in " + member_anno);
 	}
 	
 	/**
@@ -147,7 +147,7 @@ public final class MetaAgentFactory {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		throw new UnsupportedOperationException("Cannot find OpenflowVersion meta-agent for " + field.getSignature());
+		throw new UnsupportedOperationException("Cannot find meta-agent for " + field.getSignature());
 	}
 	
 	
