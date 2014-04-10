@@ -128,7 +128,6 @@ public final class PetitSerializer {
 						"}"), adapter_clazz));
 				
 				
-				adapter_clazz.debugWriteFile("z:\\");
 				return (SerializeAdapter<?>) adapter_clazz.toClass()
 						.getConstructor(Class.class)
 						.newInstance(clazz);
