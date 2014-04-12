@@ -23,7 +23,7 @@ public final class NullaryInstantiator extends Instantiator {
 	 */
 	public NullaryInstantiator(final Class<?> clazz) throws SecurityException, NoSuchMethodException {
 		super(clazz);
-		_ctor = clazz.getConstructor();
+		_ctor = clazz.getDeclaredConstructor();
 		_ctor.setAccessible(true);
 	}
 	

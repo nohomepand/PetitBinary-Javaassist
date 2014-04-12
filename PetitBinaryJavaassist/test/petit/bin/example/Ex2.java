@@ -22,13 +22,6 @@ public class Ex2 extends AbstractExample {
 	@ExternStruct("resolveStringObject")
 	protected BinaryString _str;
 	
-//	protected final BinaryString resolveStringObject() {
-//		if (_flag)
-//			return new BinaryString.NullTerminatedString(null);
-//		else
-//			return new BinaryString.BString(null);
-//	}
-	
 	public final void set(final BinaryString bs) {
 		_flag = bs instanceof BinaryString.NullTerminatedString;
 		_str = bs;

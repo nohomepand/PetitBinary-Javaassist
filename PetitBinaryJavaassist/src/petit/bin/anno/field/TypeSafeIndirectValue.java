@@ -20,16 +20,14 @@ import petit.bin.util.KnownCtClass;
  * ある列挙型 Eがあるとして，あるフィールド F の型が E の場合，F の書き込みは Eから整数値または整数値の配列へ変換され，
  * 読み込みは整数値または整数値の配列から Eへ変換される．<br />
  * <br />
- * このフィールドのインスタンスの解決は {@link ExternStruct} と異なり，このフィールドの型のクラスで行われる<br />
+ * このフィールドのインスタンスの解決は {@link ExternStruct} と同様に，このフィールドが定義されたクラスで行われる<br />
  * <br />
  * 読み込み時は， {@link #storeType()} で示される型に基づいて整数または整数値の配列が読み取られ，
  * {@link #fromStored()} で示される，シグネチャとして ({@link #storeType()})L[type of the field]; を持つメソッドへ渡され，
  * フィールドの値としてその戻り値が割り当てられる<br />
  * <br />
- * 書き込み字は， {@link #toStore()} で示される，シグネチャとして (){@link #storeType()} を持つメソッドへ渡され，
+ * 書き込み字は， {@link #toStore()} で示される，シグネチャとして (L[type of the field];){@link #storeType()} を持つメソッドへ渡され，
  * その戻り値が書き込まれる<br />
- * {@link #toStore()} はデフォルト値として， {@link Enum#ordinal()} を呼び出すための "ordinal" が指定されている
- * <br />
  * 以下に C風の enumと，Java風の enumおよびフィールド上の表現の例を示す
  * <pre>
  * C:
@@ -45,18 +43,10 @@ import petit.bin.util.KnownCtClass;
  *     COLOR2(0xff00ff),
  *     COLOR3(0xffc0ff);
  *     
- *     private int v;
+ *     public int v;
  *     
  *     private FOO(int v) {
  *         this.v = v;
- *     }
- *     
- *     public final int toInt() {
- *         return v;
- *     }
- *     
- *     public static FOO fromInt(int i) {
- *         <i>{@literal<returns FOO instance which has i>}</i>
  *     }
  *     
  * }
@@ -67,19 +57,12 @@ import petit.bin.util.KnownCtClass;
  *     public FOO COLOR2 = new FOO(0xff00ff);
  *     public FOO COLOR3 = new FOO(0xffc0ff);
  *     
- *     private int v;
+ *     public int v;
  *     
  *     private FOO(int v) {
  *         this.v = v;
  *     }
  *     
- *     public final int toInt() {
- *         return v;
- *     }
- *     
- *     public static FOO fromInt(int i) {
- *         <i>{@literal<returns FOO instance which has i>}</i>
- *     }
  * }
  * 
  * Using FOO in java:
@@ -88,12 +71,20 @@ import petit.bin.util.KnownCtClass;
  *     {@literal @StructMember(0)}
  *     {@literal @TypeSafeValue(storeType = int.class, fromStored = "fromInt", toStore = "toInt")}
  *     protected FOO foo;
+ *     
+ *     protected int toInt(FOO foo) {
+ *         return foo.v;
+ *     }
+ *     
+ *     protected FOO fromInt(int i) {
+ *         <i>{@literal<returns FOO instance which has i>}</i>
+ *     }
  * }
  * </pre>
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface TypeSafeValue {
+public @interface TypeSafeIndirectValue {
 	
 	/**
 	 * 読み書き時の整数値または整数値の配列(値表現)の指定<br />
@@ -153,7 +144,7 @@ public @interface TypeSafeValue {
 		@Override
 		public void checkField(CtField field) throws CannotCompileException {
 			try {
-				final TypeSafeValue anno = (TypeSafeValue) field.getAnnotation(TypeSafeValue.class);
+				final TypeSafeIndirectValue anno = (TypeSafeIndirectValue) field.getAnnotation(TypeSafeIndirectValue.class);
 				final Class<?> st = anno.storeType();
 				final Class<?> ct;
 				if (st.isArray()) {
@@ -174,7 +165,7 @@ public @interface TypeSafeValue {
 		@Override
 		public String makeReaderSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			try {
-				final TypeSafeValue anno = (TypeSafeValue) field.getAnnotation(TypeSafeValue.class);
+				final TypeSafeIndirectValue anno = (TypeSafeIndirectValue) field.getAnnotation(TypeSafeIndirectValue.class);
 				final Class<?> st = anno.storeType();
 				if (st.isArray()) {
 					final Class<?> ct = st.getComponentType();
@@ -196,7 +187,7 @@ public @interface TypeSafeValue {
 							"	$typeStore$[] ar = ($typeStore$[]) stockObj.get();\n" +
 							"	for (int i = 0; i < ar.length; i++)\n" +
 							"		ar[i] = $varReader$.read$strStoreAccessSuffix$();\n" +
-							"	$varField$ = ($typeField$) $typeField$.$strFromStoredMethod$(ar);\n" +
+							"	$varField$ = ($typeField$) $varTarget$.$strFromStoredMethod$(ar);\n" +
 							"	stockObj.release();\n" +
 							"}");
 				} else {
@@ -204,7 +195,7 @@ public @interface TypeSafeValue {
 					cg.map("strFromStoredMethod", anno.fromStored());
 					cg.map("typeStore", st.getSimpleName());
 					return cg.replaceAll(
-							"$varField$ = ($typeField$) $typeField$.$strFromStoredMethod$(($typeStore$) $varReader$.read$strStoreAccessSuffix$());"
+							"$varField$ = ($typeField$) $varTarget$.$strFromStoredMethod$(($typeStore$) $varReader$.read$strStoreAccessSuffix$());"
 							);
 				}
 			} catch (ClassNotFoundException e) {
@@ -215,7 +206,7 @@ public @interface TypeSafeValue {
 		@Override
 		public String makeWriterSource(CtClass adapter_clazz, CtField field, CodeGenerator cg) throws CannotCompileException {
 			try {
-				final TypeSafeValue anno = (TypeSafeValue) field.getAnnotation(TypeSafeValue.class);
+				final TypeSafeIndirectValue anno = (TypeSafeIndirectValue) field.getAnnotation(TypeSafeIndirectValue.class);
 				final Class<?> st = anno.storeType();
 				if (st.isArray()) {
 					final Class<?> ct = st.getComponentType();
@@ -225,7 +216,7 @@ public @interface TypeSafeValue {
 					cg.map("typeStore", ct.getSimpleName());
 					return cg.replaceAll(
 							"if ($varField$ != null) {\n" +
-							"	$typeStore$[] ar = $varField$.$strToStoreMethod$();\n" +
+							"	$typeStore$[] ar = $varTarget$.$strToStoreMethod$($varField$);\n" +
 							"	if (ar != null)\n" +
 							"		for (int i = 0; i < ar.length; i++)\n" +
 							"			$varWriter$.write$strStoreAccessSuffix$(ar[i]);\n" +
@@ -236,7 +227,7 @@ public @interface TypeSafeValue {
 					cg.map("strToStoreMethod", anno.toStore());
 					return cg.replaceAll(
 							"if ($varField$ != null) \n" +
-							"	$varWriter$.write$strStoreAccessSuffix$(($typeStore$) $varField$.$strToStoreMethod$());");
+							"	$varWriter$.write$strStoreAccessSuffix$(($typeStore$) $varTarget$.$strToStoreMethod$($varField$));");
 				}
 			} catch (ClassNotFoundException e) {
 				throw new CannotCompileException(e);

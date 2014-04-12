@@ -170,6 +170,9 @@ public class Util {
 		if (_class_instantiator_map.containsKey(clazz)) {
 			return _class_instantiator_map.get(clazz);
 		} else {
+			if ((clazz.getModifiers() & java.lang.reflect.Modifier.ABSTRACT) != 0)
+				throw new IllegalArgumentException(clazz.getCanonicalName() + " is abstract class");
+			
 			Instantiator instor = null;
 			try {
 				instor = new NullaryInstantiator(clazz);

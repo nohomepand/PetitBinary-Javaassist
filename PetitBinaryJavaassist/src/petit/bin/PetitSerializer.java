@@ -55,7 +55,7 @@ public final class PetitSerializer {
 		return (SerializeAdapter<T>) maybe_null;
 	}
 	
-	private static final void checkStructClassModifier(final Class<?> clazz) throws CannotCompileException {
+	private static final void checkStructClass(final Class<?> clazz) throws CannotCompileException {
 		final int mod = clazz.getModifiers();
 //		if ((mod & java.lang.reflect.Modifier.FINAL) != 0)
 //			throw new CannotCompileException(clazz.getCanonicalName() +  ": final class is not supported");
@@ -63,13 +63,15 @@ public final class PetitSerializer {
 			throw new CannotCompileException(clazz.getCanonicalName() +  ": interface type is not supported");
 		if (clazz.isMemberClass() && (mod & java.lang.reflect.Modifier.STATIC) == 0)
 			throw new CannotCompileException(clazz.getCanonicalName() +  ": non-static member class is not supported");
+		if (!clazz.isAnnotationPresent(Struct.class))
+			throw new CannotCompileException(clazz.getCanonicalName() +  ": no " + KnownCtClass.STRUCT.CANONICALNAME + " annotasion is present");
 	}
 	
 	@SuppressWarnings("unchecked")
 	private static final SerializeAdapter<?> createSerializeAdapter(final Class<?> clazz) throws CannotCompileException, NotFoundException {
 		if (KnownCtClass.SERIALIZE_ADAPTER.CT_CLAZZ == null)
 			throw new NotFoundException("Cannot locate SerializeAdapter class");
-		checkStructClassModifier(clazz);
+		checkStructClass(clazz);
 		
 		try {
 			final CodeGenerator cg = new CodeGenerator();

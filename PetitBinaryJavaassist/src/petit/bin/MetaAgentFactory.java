@@ -23,6 +23,7 @@ import petit.bin.anno.field.Int32;
 import petit.bin.anno.field.Int64;
 import petit.bin.anno.field.Int8;
 import petit.bin.anno.field.Int8Boolean;
+import petit.bin.anno.field.TypeSafeIndirectValue;
 import petit.bin.anno.field.TypeSafeValue;
 import petit.bin.anno.field.UInt16;
 import petit.bin.anno.field.UInt32;
@@ -74,6 +75,7 @@ public final class MetaAgentFactory {
 		addMetaAgent(Float32Array.class);
 		addMetaAgent(Float64Array.class);
 		addMetaAgent(TypeSafeValue.class);
+		addMetaAgent(TypeSafeIndirectValue.class);
 //		addMetaAgent(UInt16Array.class);
 		try {
 			{
