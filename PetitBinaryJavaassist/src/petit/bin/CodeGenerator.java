@@ -154,7 +154,8 @@ public final class CodeGenerator {
 	/**
 	 * $で囲まれた文字列を得るための正規表現
 	 */
-	public static final Pattern ID_REGEX = Pattern.compile("\\$($.*?|.+?)\\$");
+	//public static final Pattern ID_REGEX = Pattern.compile("\\$($.*?|.+?)\\$");
+	public static final Pattern ID_REGEX = Pattern.compile("\\$(.+?)\\$");
 	
 	private final Map<String, String> _mapper;
 	
@@ -246,18 +247,16 @@ public final class CodeGenerator {
 	 * @return 置換した文字列
 	 */
 	public final String replaceAll(final String src) {
-		String result = src;
+		String result = src.replaceAll(Pattern.quote("$$$"), "\0");
 		Matcher m = ID_REGEX.matcher(result);
 		while (m.find()) {
 			final String found = m.group(1);
-			if (found.equals("$"))
-				result = m.replaceFirst("\0");
-			else {
-				final String replacement = _mapper.get(found.toLowerCase());
-				if (replacement == null)
-					throw new IllegalArgumentException(found + " is not mapped");
-				result = m.replaceFirst(replacement);
-			}
+			final String replacement = _mapper.get(found.toLowerCase());
+			if (replacement == null)
+				throw new IllegalArgumentException(found + " is not mapped");
+			
+			result = Pattern.compile(Pattern.quote("$" + found + "$"), Pattern.CASE_INSENSITIVE)
+					.matcher(result).replaceAll(replacement);
 			m = ID_REGEX.matcher(result);
 		}
 		result = result.replace('\0', '$');
