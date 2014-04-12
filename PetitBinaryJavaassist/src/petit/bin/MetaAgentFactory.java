@@ -76,6 +76,7 @@ public final class MetaAgentFactory {
 		addMetaAgent(Float64Array.class);
 		addMetaAgent(TypeSafeValue.class);
 		addMetaAgent(TypeSafeIndirectValue.class);
+		addMetaAgent(Int8Boolean.class);
 //		addMetaAgent(UInt16Array.class);
 		try {
 			{
