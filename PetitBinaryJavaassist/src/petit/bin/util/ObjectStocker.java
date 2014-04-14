@@ -3,14 +3,13 @@ package petit.bin.util;
 import java.util.LinkedList;
 
 /**
- * {@link Object}を保存しておくもの<br />
- * あえて raw型
+ * 値を保存しておくもの
  * 
  * @author 俺用
  * @since 2014/04/08 PetitBinaryJavaassist
  *
  */
-public class ObjectStocker {
+public class ObjectStocker<T> {
 	
 	/**
 	 * {@link ObjectStocker} に保存されているオブジェクト
@@ -23,14 +22,14 @@ public class ObjectStocker {
 		
 		private boolean _is_released;
 		
-		private final Object _obj;
+		private final T _obj;
 		
 		/**
 		 * 初期化
 		 * 
 		 * @param object オブジェクト
 		 */
-		private StockObject(final Object object) {
+		private StockObject(final T object) {
 			_obj = object;
 			_is_released = false;
 		}
@@ -42,7 +41,7 @@ public class ObjectStocker {
 		 * @return 保存されたオブジェクト
 		 * @throws IllegalStateException 
 		 */
-		public final Object get() throws IllegalStateException {
+		public final T get() throws IllegalStateException {
 			if (_is_released)
 				throw new IllegalStateException("This object " + _obj + " is already released");
 			
@@ -53,6 +52,9 @@ public class ObjectStocker {
 		 * このオブジェクトを親の {@link ObjectStocker} へ保存しなおす
 		 */
 		public final void release() {
+			if (_is_released)
+				return;
+			
 			ObjectStocker.this.release(this);
 			_is_released = true;
 		}
@@ -74,7 +76,7 @@ public class ObjectStocker {
 	 * 初期化
 	 */
 	public ObjectStocker() {
-		_store = new LinkedList<>();
+		_store = new LinkedList<StockObject>();
 	}
 	
 	/**
@@ -82,7 +84,7 @@ public class ObjectStocker {
 	 * 
 	 * @param obj 保存されるオブジェクト
 	 */
-	public final void stock(final Object obj) {
+	public final void stock(final T obj) {
 		_store.addLast(new StockObject(obj));
 	}
 	
@@ -104,7 +106,7 @@ public class ObjectStocker {
 	 * 
 	 * @return 保存されているオブジェクト，または何も保存されていない場合は null
 	 */
-	public final StockObject take() {
+	public final ObjectStocker<T>.StockObject take() {
 		if (_store.isEmpty())
 			return null;
 		else {

@@ -28,7 +28,15 @@ public final class InputStreamStore implements ReadableStore, Closeable {
 	
 	private Object _ctx;
 	
+	/**
+	 * 初期化
+	 * 
+	 * @param src 対象の {@link InputStream}
+	 */
 	public InputStreamStore(final InputStream src) {
+		if (src == null)
+			throw new NullPointerException("Argument src must not be null");
+		
 		_src = (DataInputStream) (src instanceof DataInputStream ? src : new DataInputStream(src));
 		_bs = new LinkedList<Store.SerializationByteOrder>();
 		_cur_pos = 0;
