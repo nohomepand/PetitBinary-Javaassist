@@ -4,6 +4,7 @@ import java.io.File;
 
 import petit.bin.PetitSerializer;
 import petit.bin.SerializeAdapter;
+import petit.bin.anno.ReadValidator;
 import petit.bin.anno.Struct;
 import petit.bin.anno.StructMember;
 import petit.bin.anno.array.ArraySizeByField;
@@ -85,7 +86,13 @@ public final class WindowsBitmapFile {
 		protected short biBitCount;
 		
 		@StructMember(5)
+		@ReadValidator("biCompressionValidator")
 		protected int biCompression;
+		
+		protected final void biCompressionValidator(final ReadableStore rs) {
+			if (biCompression != 0)
+				throw new UnsupportedOperationException("biCompression != 0");
+		}
 		
 		@StructMember(6)
 		protected int biSizeImage;

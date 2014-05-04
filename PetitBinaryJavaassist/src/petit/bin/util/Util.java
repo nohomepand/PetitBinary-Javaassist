@@ -22,6 +22,11 @@ import petit.bin.util.instor.UnsafeInstantiator;
 public class Util {
 	
 	/**
+	 * この環境のデフォルトのクラスプール
+	 */
+	public static final ClassPool CP = ClassPool.getDefault();
+	
+	/**
 	 * {@link #getManagedFields(ClassPool, Class)} で private なフィールドをチェックする場合は true
 	 */
 	public static final boolean CHECK_FIELD_MODIFIER_PRIVATE = true;
@@ -43,13 +48,13 @@ public class Util {
 		_primitive_ctclass_map.put(CtClass.longType, long.class);
 		_primitive_ctclass_map.put(CtClass.floatType, float.class);
 		_primitive_ctclass_map.put(CtClass.doubleType, double.class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(byte[].class.getName()), byte[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(short[].class.getName()), short[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(char[].class.getName()), char[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(int[].class.getName()), int[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(long[].class.getName()), long[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(float[].class.getName()), float[].class);
-		_primitive_ctclass_map.put(DefaultClassPool.CP.getOrNull(double[].class.getName()), double[].class);
+		_primitive_ctclass_map.put(Util.CP.getOrNull(byte[].class.getName()), byte[].class);
+		_primitive_ctclass_map.put(Util.CP.getOrNull(short[].class.getName()), short[].class);
+		_primitive_ctclass_map.put(Util.CP.getOrNull(char[].class.getName()), char[].class);
+		_primitive_ctclass_map.put(Util.CP.getOrNull(int[].class.getName()), int[].class);
+		_primitive_ctclass_map.put(Util.CP.getOrNull(long[].class.getName()), long[].class);
+		_primitive_ctclass_map.put(Util.CP.getOrNull(float[].class.getName()), float[].class);
+		_primitive_ctclass_map.put(Util.CP.getOrNull(double[].class.getName()), double[].class);
 		
 		_class_instantiator_map = new HashMap<>();
 	}

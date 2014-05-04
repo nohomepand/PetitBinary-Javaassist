@@ -2,12 +2,14 @@ package petit.bin.example;
 
 import java.util.Arrays;
 
+import petit.bin.anno.ReadValidator;
 import petit.bin.anno.Struct;
 import petit.bin.anno.StructMember;
 import petit.bin.anno.field.TypeSafeValue;
 import petit.bin.store.ReadableStore;
 
-@Struct(readValidator = "readValidator")
+@Struct
+@ReadValidator("readValidator")
 public class Ex3 extends AbstractExample {
 	
 	public static enum Foo {

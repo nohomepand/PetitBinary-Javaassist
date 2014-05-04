@@ -16,36 +16,37 @@ import petit.bin.util.instor.Instantiator;
  */
 public abstract class SerializeAdapter<T> {
 	
-	/**
-	 * フィールドを持たないクラスに対する {@link SerializeAdapter}
-	 * 
-	 * @author 俺用
-	 * @since 2014/04/06 PetitBinaryJavaassist
-	 * 
-	 * @param <T> 対象のクラス
-	 */
-	static final class NullFieldSerializeAdapter<T> extends SerializeAdapter<T> {
-		
-		/**
-		 * 初期化
-		 * 
-		 * @param clazz 対象のクラス
-		 */
-		public NullFieldSerializeAdapter(final Class<T> clazz) {
-			super(clazz);
-		}
-		
-		@Override
-		public T read(T ao, ReadableStore src) throws Exception {
-			return ao;
-		}
-		
-		@Override
-		public void write(T ao, WritableStore dst) throws Exception {
-			return;
-		}
-		
-	}
+//	フィールドを持たないクラスであっても Read/WriteValidator が動作するためにコードを作る必要があるため，これは廃止
+//	/**
+//	 * フィールドを持たないクラスに対する {@link SerializeAdapter}
+//	 * 
+//	 * @author 俺用
+//	 * @since 2014/04/06 PetitBinaryJavaassist
+//	 * 
+//	 * @param <T> 対象のクラス
+//	 */
+//	static final class NullFieldSerializeAdapter<T> extends SerializeAdapter<T> {
+//		
+//		/**
+//		 * 初期化
+//		 * 
+//		 * @param clazz 対象のクラス
+//		 */
+//		public NullFieldSerializeAdapter(final Class<T> clazz) {
+//			super(clazz);
+//		}
+//		
+//		@Override
+//		public T read(T ao, ReadableStore src) throws Exception {
+//			return ao;
+//		}
+//		
+//		@Override
+//		public void write(T ao, WritableStore dst) throws Exception {
+//			return;
+//		}
+//		
+//	}
 	
 	/**
 	 * 構造体を表す対象のクラス

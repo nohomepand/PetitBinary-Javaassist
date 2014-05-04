@@ -88,7 +88,7 @@ public enum KnownCtClass {
 		CLAZZ = clazz;
 		BINARYNAME = clazz.getName();
 		CANONICALNAME = clazz.getCanonicalName();
-		CT_CLAZZ = DefaultClassPool.CP.getOrNull(clazz.getName());
+		CT_CLAZZ = Util.CP.getOrNull(clazz.getName());
 	}
 	
 }

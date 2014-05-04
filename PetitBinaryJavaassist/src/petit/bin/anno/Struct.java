@@ -23,32 +23,24 @@ import petit.bin.store.Store.SerializationByteOrder;
 public @interface Struct {
 	
 	/**
-	 * アライメントのByte Packingのサイズ
-	 * 
-	 * @return 構造体のアライメント
-	 */
-	@Deprecated
-	public abstract int packSize() default 1;
-	
-	/**
 	 * バイトオーダー
 	 * 
 	 * @return バイトオーダー
 	 */
 	public abstract SerializationByteOrder byteOrder() default SerializationByteOrder.NEUTRAL;
 	
-	/**
-	 * 読み込み後の検証機を表すメソッド名
-	 * 
-	 * @return 読み込み後の検証機を表すメソッド名
-	 */
-	public abstract String readValidator() default "";
-	
-	/**
-	 * 書き込み前の検証機を表すメソッド名
-	 * 
-	 * @return 書き込み前の検証機を表すメソッド名
-	 */
-	public abstract String writeValidator() default "";
+//	/**
+//	 * 読み込み後の検証機を表すメソッド名
+//	 * 
+//	 * @return 読み込み後の検証機を表すメソッド名
+//	 */
+//	public abstract String readValidator() default "";
+//	
+//	/**
+//	 * 書き込み前の検証機を表すメソッド名
+//	 * 
+//	 * @return 書き込み前の検証機を表すメソッド名
+//	 */
+//	public abstract String writeValidator() default "";
 	
 }

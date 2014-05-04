@@ -26,4 +26,25 @@ public @interface StructMember {
 	 */
 	public abstract int value();
 	
+//	/**
+//	 * 読み込み後の検証機を表すメソッド名
+//	 * 
+//	 * @return 読み込み後の検証機を表すメソッド名
+//	 */
+//	public abstract String readValidator() default "";
+//	
+//	/**
+//	 * 書き込み前の検証機を表すメソッド名
+//	 * 
+//	 * @return 書き込み前の検証機を表すメソッド名
+//	 */
+//	public abstract String writeValidator() default "";
+	
+	/**
+	 * このフィールドの読み書きの後のパディングの大きさ(デフォルト 0)
+	 * 
+	 * @return このフィールドの読み書きの後のパディングの大きさ
+	 */
+	public abstract int paddingAfter() default 0;
+	
 }
